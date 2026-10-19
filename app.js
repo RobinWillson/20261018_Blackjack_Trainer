@@ -338,7 +338,8 @@ const App = {
     totalQ: 0,
     correctCount: 0,
     mistakes: JSON.parse(localStorage.getItem('bj_mistakes') || '[]'),
-    waitingNext: false
+    waitingNext: false,
+    canAdvance: false
   },
 
   init() {
@@ -347,6 +348,7 @@ const App = {
     this.bindSteppers();
     this.initMode5();
     this.initStrategyLookup();
+    this.initSettingsView();
     this.updateStatsDisplay();
     this.updateHomeDisplay();
     this.switchTab('home-view');
@@ -462,76 +464,48 @@ const App = {
     }
 
 
-    // Mode 5 "換分類" Button in Drill Top Bar -> returns to Home and expands accordion
-    const changeCatBtn = document.getElementById('btn-m5-change-cat');
-    if (changeCatBtn) {
-      changeCatBtn.addEventListener('click', () => {
+    // 4. 弱點手牌回顧 (獨立頁面入口)
+    const cardWeakspots = document.getElementById('card-weakspots-entry');
+    if (cardWeakspots) {
+      cardWeakspots.addEventListener('click', () => {
         triggerHaptic('light');
-        this.switchTab('home-view');
-        if (m5Sublist) {
-          m5Sublist.classList.remove('hidden');
-          if (m5Arrow) m5Arrow.textContent = '▴';
-          const cardGroup = document.getElementById('card-mode5-group');
-          if (cardGroup) {
-            setTimeout(() => {
-              cardGroup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
-          }
-        }
+        this.switchTab('weakspots-view');
       });
     }
 
-    // Home: Strategy Rule Toggle (S17s / S17)
-    const homeRuleBtn = document.getElementById('home-rule-toggle');
-    if (homeRuleBtn) {
-      homeRuleBtn.addEventListener('click', () => {
+    // 5. 其他設定 (獨立頁面入口)
+    const cardSettings = document.getElementById('card-settings-entry');
+    if (cardSettings) {
+      cardSettings.addEventListener('click', () => {
         triggerHaptic('light');
-        this.m5.ruleMode = (this.m5.ruleMode === 's17s') ? 's17' : 's17s';
-        localStorage.setItem('bj_rule_mode', this.m5.ruleMode);
-        this.updateHomeDisplay();
+        this.switchTab('settings-view');
       });
     }
 
-    // Card Style Toggle: Shared handler
-    const toggleStyle = () => {
-      triggerHaptic('light');
-      this.cardStyle = (this.cardStyle === 'realistic') ? 'stealth' : 'realistic';
-      localStorage.setItem('bj_card_style', this.cardStyle);
-      this.updateHomeDisplay();
-      if (this.activeTab === 'mode5') this.renderMode5Cards();
-      else if (this.activeTab === 'mode3') this.renderMode3Pair();
-    };
-
-    const homeStyleBtn = document.getElementById('home-style-toggle');
-    if (homeStyleBtn) homeStyleBtn.addEventListener('click', toggleStyle);
-
-    const headerStyleBtn = document.getElementById('btn-header-style-toggle');
-    if (headerStyleBtn) headerStyleBtn.addEventListener('click', toggleStyle);
-
-    // Weakspots Modal Controls
-    const homeWeakBtn = document.getElementById('home-weakspots-btn');
-    const modal = document.getElementById('weakspots-modal');
-    const closeModalBtn = document.getElementById('btn-close-modal');
+    // 清空弱點紀錄
     const clearWeakBtn = document.getElementById('btn-clear-weakspots');
-
-    if (homeWeakBtn && modal) {
-      homeWeakBtn.addEventListener('click', () => {
-        triggerHaptic('light');
-        this.renderWeakSpotsList();
-        modal.classList.add('open');
-      });
-    }
-    if (closeModalBtn && modal) {
-      closeModalBtn.addEventListener('click', () => modal.classList.remove('open'));
-    }
     if (clearWeakBtn) {
       clearWeakBtn.addEventListener('click', () => {
+        triggerHaptic('light');
         this.m5.mistakes = [];
         localStorage.removeItem('bj_mistakes');
         this.renderWeakSpotsList();
         this.updateHomeDisplay();
         this.updateStatsDisplay();
+      });
+    }
+
+    // 頂部導航列風格切換按鈕
+    const headerStyleBtn = document.getElementById('btn-header-style-toggle');
+    if (headerStyleBtn) {
+      headerStyleBtn.addEventListener('click', () => {
         triggerHaptic('light');
+        this.cardStyle = (this.cardStyle === 'realistic') ? 'stealth' : 'realistic';
+        localStorage.setItem('bj_card_style', this.cardStyle);
+        this.updateHomeDisplay();
+        this.updateSettingsDisplay();
+        if (this.activeTab === 'mode5') this.renderMode5Cards();
+        else if (this.activeTab === 'mode3') this.renderMode3Pair();
       });
     }
   },
@@ -656,22 +630,16 @@ const App = {
         this.nextMode5Question();
       } else if (targetId === 'lookup-view') {
         this.updateLookupView();
+      } else if (targetId === 'weakspots-view') {
+        this.renderWeakSpotsList();
+      } else if (targetId === 'settings-view') {
+        this.updateSettingsDisplay();
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   updateHomeDisplay() {
-    const ruleEl = document.getElementById('home-rule-text');
-    if (ruleEl) {
-      ruleEl.textContent = (this.m5.ruleMode === 's17s') ? 'S17s (含投降)' : 'S17 (無投降)';
-    }
-
-    const styleEl = document.getElementById('home-style-text');
-    if (styleEl) {
-      styleEl.textContent = (this.cardStyle === 'realistic') ? '實體紙牌' : '純英文';
-    }
-
     const headerStyleBtn = document.getElementById('btn-header-style-toggle');
     if (headerStyleBtn) {
       headerStyleBtn.textContent = (this.cardStyle === 'realistic') ? '牌面風格' : '純英文';
@@ -682,8 +650,84 @@ const App = {
       countEl.textContent = this.m5.mistakes.length;
     }
 
+    const homeSettingsDesc = document.getElementById('home-settings-desc');
+    if (homeSettingsDesc) {
+      const ruleText = (this.m5.ruleMode === 's17s') ? 'S17s (含投降)' : 'S17 (無投降)';
+      const styleText = (this.cardStyle === 'realistic') ? '實體紙牌' : '低調純英文';
+      homeSettingsDesc.textContent = `${ruleText} · ${styleText}`;
+    }
+
     // 同步更新策略查詢頁面的規則顯示與結果
     this.updateLookupView();
+  },
+
+  // =========================================================================
+  // 其他設定頁面 (Settings Engine)
+  // =========================================================================
+  initSettingsView() {
+    // 規則切換按鈕 (S17s / S17)
+    const ruleBtns = document.querySelectorAll('.settings-options-grid [data-rule]');
+    ruleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.m5.ruleMode = btn.dataset.rule;
+        localStorage.setItem('bj_rule_mode', this.m5.ruleMode);
+        this.updateHomeDisplay();
+        this.updateLookupView();
+        this.updateSettingsDisplay();
+      });
+    });
+
+    // 風格切換按鈕 (Realistic / Stealth)
+    const styleBtns = document.querySelectorAll('.settings-options-grid [data-style]');
+    styleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.cardStyle = btn.dataset.style;
+        localStorage.setItem('bj_card_style', this.cardStyle);
+        this.updateHomeDisplay();
+        this.updateSettingsDisplay();
+        if (this.activeTab === 'mode5') this.renderMode5Cards();
+        else if (this.activeTab === 'mode3') this.renderMode3Pair();
+      });
+    });
+
+    // 重設最高連對紀錄
+    const resetStreaksBtn = document.getElementById('btn-reset-streaks');
+    if (resetStreaksBtn) {
+      resetStreaksBtn.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.m5.streak = 0;
+        this.m5.maxStreak = 0;
+        localStorage.removeItem('bj_max_streak');
+        this.updateStatsDisplay();
+        alert('最高連對紀錄已重設為 0！');
+      });
+    }
+
+    this.updateSettingsDisplay();
+  },
+
+  updateSettingsDisplay() {
+    // 1. 更新規則按鈕 active 樣式
+    document.querySelectorAll('[data-rule]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.rule === this.m5.ruleMode);
+    });
+
+    // 2. 更新風格按鈕 active 樣式
+    document.querySelectorAll('[data-style]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.style === this.cardStyle);
+    });
+
+    // 3. 更新即時預覽牌面
+    const previewSlot = document.getElementById('settings-preview-slot');
+    if (previewSlot) {
+      previewSlot.innerHTML = '';
+      const sampleCard1 = { symbol: '10', val: 10, suit: 'S', suitName: 'Spade', suitIcon: '♠', color: 'black' };
+      const sampleCard2 = { symbol: 'A', val: 1, suit: 'H', suitName: 'Heart', suitIcon: '♥', color: 'red' };
+      previewSlot.appendChild(createCardElement(sampleCard1, this.cardStyle));
+      previewSlot.appendChild(createCardElement(sampleCard2, this.cardStyle));
+    }
   },
 
   updateLookupView() {
@@ -808,19 +852,44 @@ const App = {
     // 綁定五大動作按鈕 (Hit, Stand, Double, Split, Surrender)
     const actBtns = document.querySelectorAll('.action-btn');
     actBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        if (this.m5.waitingNext) {
+          // 若已有結果顯示，點擊按鈕亦作為點擊螢幕繼續下一題
+          return;
+        }
+        e.stopPropagation();
         const action = btn.dataset.action;
         this.handleMode5Answer(action);
       });
     });
+
+    // 點擊螢幕任一處進入下一題測試
+    const mode5View = document.getElementById('mode5');
+    if (mode5View) {
+      mode5View.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-header-home')) {
+          return;
+        }
+        if (this.m5.waitingNext && this.m5.canAdvance) {
+          this.m5.waitingNext = false;
+          this.m5.canAdvance = false;
+          this.nextMode5Question();
+        }
+      });
+    }
   },
 
   nextMode5Question() {
     this.m5.waitingNext = false;
+    this.m5.canAdvance = false;
     const feedbackEl = document.getElementById('m5-feedback');
     if (feedbackEl) {
       feedbackEl.className = 'feedback-box hidden';
       feedbackEl.innerHTML = '';
+    }
+    const tableFelt = document.getElementById('m5-table-felt');
+    if (tableFelt) {
+      tableFelt.classList.remove('is-correct', 'is-wrong');
     }
 
     // 產生手牌情境
@@ -831,14 +900,6 @@ const App = {
     this.m5.evalRes = getStandardAction(this.m5.pCard1, this.m5.pCard2, this.m5.dealerCard, this.m5.ruleMode);
 
     this.renderMode5Cards();
-
-    // 更新手牌描述
-    const badgeEl = document.getElementById('m5-hand-badge');
-    if (badgeEl) {
-      if (this.m5.evalRes.isPair) badgeEl.textContent = `一對 ${this.m5.pCard1.symbol},${this.m5.pCard2.symbol}`;
-      else if (this.m5.evalRes.isSoft) badgeEl.textContent = `軟 ${this.m5.evalRes.total} 點 (${this.m5.evalRes.key})`;
-      else badgeEl.textContent = `硬 ${this.m5.evalRes.total} 點`;
-    }
   },
 
   generateMode5Scenario(cat = 'all') {
@@ -908,6 +969,7 @@ const App = {
     const expected = this.m5.evalRes.action;
     const isCorrect = (userAction === expected);
     const feedbackEl = document.getElementById('m5-feedback');
+    const tableFelt = document.getElementById('m5-table-felt');
     const tip = getStrategyTip(this.m5.evalRes, this.m5.dealerCard);
 
     const actionNames = {
@@ -928,19 +990,30 @@ const App = {
         localStorage.setItem('bj_max_streak', this.m5.maxStreak);
       }
 
+      if (tableFelt) {
+        tableFelt.classList.remove('is-wrong');
+        tableFelt.classList.add('is-correct');
+      }
+
       feedbackEl.className = 'feedback-box correct';
       feedbackEl.innerHTML = `
         <div class="feedback-title">✓ 完全正確！【${actionNames[expected]}】</div>
         ${tip ? `<div class="feedback-tip">${tip}</div>` : ''}
+        <div class="feedback-continue-hint">點擊螢幕任一處繼續 ›</div>
       `;
 
-      // 答對後自動於 0.6 秒流暢切換下一題
       this.m5.waitingNext = true;
-      setTimeout(() => this.nextMode5Question(), 650);
+      this.m5.canAdvance = false;
+      setTimeout(() => { this.m5.canAdvance = true; }, 120);
     } else {
       audio.playWrong();
       triggerHaptic('error');
       this.m5.streak = 0;
+
+      if (tableFelt) {
+        tableFelt.classList.remove('is-correct');
+        tableFelt.classList.add('is-wrong');
+      }
 
       // 記錄弱點
       this.m5.mistakes.unshift({
@@ -959,13 +1032,12 @@ const App = {
         <div class="feedback-title">✕ 決策失誤！應為：<strong>${actionNames[expected]}</strong></div>
         <div class="feedback-desc">你的選擇: ${actionNames[userAction] || userAction}</div>
         ${tip ? `<div class="feedback-tip">${tip}</div>` : ''}
-        <button class="btn-next-step" id="btn-next-question">點此下一題 ›</button>
+        <div class="feedback-continue-hint">點擊螢幕任一處繼續 ›</div>
       `;
 
-      const nextBtn = document.getElementById('btn-next-question');
-      if (nextBtn) {
-        nextBtn.addEventListener('click', () => this.nextMode5Question());
-      }
+      this.m5.waitingNext = true;
+      this.m5.canAdvance = false;
+      setTimeout(() => { this.m5.canAdvance = true; }, 120);
     }
 
     // 更新計分板

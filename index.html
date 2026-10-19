@@ -156,22 +156,30 @@
             <span class="card-arrow">›</span>
           </div>
         </div>
-      </div>
 
-      <!-- Settings & Weakspots Utility Section -->
-      <div class="home-util-section">
-        <button id="home-rule-toggle" class="util-btn">
-          <span class="util-label"><span class="icon-l2">—</span> 策略規則</span>
-          <strong id="home-rule-text">S17s (含投降)</strong>
-        </button>
-        <button id="home-style-toggle" class="util-btn">
-          <span class="util-label"><span class="icon-l2">—</span> 牌面風格</span>
-          <strong id="home-style-text">實體紙牌</strong>
-        </button>
-        <button id="home-weakspots-btn" class="util-btn full-width">
-          <span class="util-label"><span class="icon-l2">—</span> 弱點手牌回顧分析</span>
-          <strong><span id="weakspots-count">0</span> 題失誤記錄 ›</strong>
-        </button>
+        <!-- 4. 弱點手牌回顧分析 (獨立頁面入口) -->
+        <div class="menu-card" id="card-weakspots-entry" style="cursor: pointer;">
+          <div class="menu-card-top">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>弱點手牌回顧分析</h3>
+              <p><span id="weakspots-count">0</span> 題失誤記錄 · 盲測錯題重點複習</p>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 5. 其他設定 (獨立頁面入口) -->
+        <div class="menu-card" id="card-settings-entry" style="cursor: pointer;">
+          <div class="menu-card-top">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>其他設定 (Settings)</h3>
+              <p id="home-settings-desc">S17s (含投降) · 實體紙牌</p>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -182,25 +190,23 @@
       <!-- Drill Info Header -->
       <div class="drill-top-bar">
         <span class="drill-category-badge" id="m5-cat-title">● S17s 基本策略 · 全方位混題</span>
-        <button class="btn-ctrl" id="btn-m5-change-cat">換分類</button>
       </div>
 
-      <!-- Casino Felt Table -->
-      <div class="table-felt">
-        <!-- Dealer Hand -->
-        <div class="hand-section">
-          <div class="hand-label-badge">莊家明牌 (Dealer)</div>
-          <div class="cards-row" id="m5-dealer-slot"></div>
+      <!-- Casino Felt Table (單列並排：玩家手牌 | 莊家明牌) -->
+      <div class="table-felt single-row-felt" id="m5-table-felt">
+        <!-- 玩家手牌 (手牌 手牌) -->
+        <div class="felt-col player-col">
+          <div class="hand-label-badge">玩家手牌</div>
+          <div class="cards-row" id="m5-player-slots"></div>
         </div>
 
-        <div style="height: 1px; background: rgba(180, 140, 105, 0.2); margin: 2px 0;"></div>
+        <!-- 分隔線 | -->
+        <div class="table-v-divider"></div>
 
-        <!-- Player Hand -->
-        <div class="hand-section">
-          <div class="cards-row" id="m5-player-slots"></div>
-          <div class="hand-label-badge" id="m5-hand-badge">
-            載入中...
-          </div>
+        <!-- 莊家明牌 (明牌) -->
+        <div class="felt-col dealer-col">
+          <div class="hand-label-badge">莊家明牌</div>
+          <div class="cards-row" id="m5-dealer-slot"></div>
         </div>
       </div>
 
@@ -500,19 +506,98 @@
       </div>
     </main>
 
-    <!-- Weak Spots Modal Drawer -->
-    <div id="weakspots-modal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-title">弱點手牌回顧</div>
-          <div style="display: flex; gap: 8px;">
-            <button id="btn-clear-weakspots" class="btn-ctrl">清空</button>
-            <button id="btn-close-modal" class="btn-ctrl">關閉</button>
+    <!-- =================================================================== -->
+    <!-- WEAKSPOTS VIEW: 弱點手牌回顧分析 (獨立單一頁面)                     -->
+    <!-- =================================================================== -->
+    <main id="weakspots-view" class="mode-view">
+      <div class="drill-top-bar">
+        <span class="drill-category-badge">● 弱點手牌回顧分析</span>
+        <button id="btn-clear-weakspots" class="btn-ctrl">清空所有記錄</button>
+      </div>
+
+      <div class="weakspots-page-container">
+        <div id="weakspots-list" class="weakspots-list-wrapper"></div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- SETTINGS VIEW: 其他設定 (獨立單一頁面)                              -->
+    <!-- =================================================================== -->
+    <main id="settings-view" class="mode-view">
+      <div class="drill-top-bar">
+        <span class="drill-category-badge">● 其他設定 · 規則與風格</span>
+      </div>
+
+      <div class="settings-page-container">
+        <!-- 設定卡片 1：策略規則 -->
+        <div class="settings-card">
+          <div class="settings-header">
+            <h4>策略規則基準 (Strategy Rules)</h4>
+            <p>選擇盲測訓練與策略速查所採用的賭場基準規則</p>
+          </div>
+          <div class="settings-options-grid">
+            <button type="button" class="setting-option-btn active" id="setting-rule-s17s" data-rule="s17s">
+              <div class="option-check">✓</div>
+              <div class="option-info">
+                <strong>S17s (含投降)</strong>
+                <span>莊家軟 17 停牌，支援晚期投降 (Late Surrender)</span>
+              </div>
+            </button>
+            <button type="button" class="setting-option-btn" id="setting-rule-s17" data-rule="s17">
+              <div class="option-check">✓</div>
+              <div class="option-info">
+                <strong>S17 (無投降)</strong>
+                <span>莊家軟 17 停牌，無投降選項 (硬 15 / 16 一律要牌)</span>
+              </div>
+            </button>
           </div>
         </div>
-        <div class="modal-body" id="weakspots-list"></div>
+
+        <!-- 設定卡片 2：牌面視覺風格 -->
+        <div class="settings-card">
+          <div class="settings-header">
+            <h4>牌面視覺風格 (Card Appearance)</h4>
+            <p>可自由選擇經典紙牌質感或上班摸魚防窺的極簡代碼</p>
+          </div>
+          <div class="settings-options-grid">
+            <button type="button" class="setting-option-btn active" id="setting-style-realistic" data-style="realistic">
+              <div class="option-check">✓</div>
+              <div class="option-info">
+                <strong>實體紙牌 (Realistic)</strong>
+                <span>溫潤象牙紙質、花色符號與立體光影</span>
+              </div>
+            </button>
+            <button type="button" class="setting-option-btn" id="setting-style-stealth" data-style="stealth">
+              <div class="option-check">✓</div>
+              <div class="option-info">
+                <strong>低調純英文 (Stealth Mode)</strong>
+                <span>純文字代碼 [ 10S ]，上班低調不引人注目</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- 即時預覽卡片 -->
+          <div class="settings-preview-box">
+            <div class="preview-label">牌面即時預覽：</div>
+            <div class="preview-cards-row" id="settings-preview-slot"></div>
+          </div>
+        </div>
+
+        <!-- 設定卡片 3：訓練數據與資訊 -->
+        <div class="settings-card">
+          <div class="settings-header">
+            <h4>訓練數據管理</h4>
+            <p>重設連對紀錄或清除快取數據</p>
+          </div>
+          <div class="settings-action-list">
+            <button type="button" class="btn-ctrl full-width-btn" id="btn-reset-streaks">重設最高連對紀錄 (Reset Streaks)</button>
+          </div>
+          <div class="settings-footer-info">
+            Blackjack Master Trainer · PWA 離線單機版
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script src="./app.js"></script>
