@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>21點 算牌與基本策略速訓器 - PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#f6f2ec">
+  <meta name="description" content="專業 21 點 Hi-Lo 算牌與 S17/S17s 基本策略離線訓練器，高顏值、全按鈕觸控免鍵盤。">
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header: Clicking Logo/Title returns to Home -->
+    <header class="app-header">
+      <div class="brand-wrapper clickable" id="btn-header-home" title="點擊返回首頁">
+        <span class="back-indicator" id="header-back-arrow">‹</span>
+        <img src="./icon.svg" alt="Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1 id="header-title">BLACKJACK PRO</h1>
+          <div class="brand-tag" id="header-subtitle">Home Menu</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <button id="btn-header-style-toggle" class="btn-ctrl">牌面風格</button>
+      </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- HOME VIEW: 功能選單首頁 (文青咖啡店簡約版面)                         -->
+    <!-- =================================================================== -->
+    <main id="home-view" class="mode-view active">
+      <div class="home-hero">
+        <h2>Blackjack Trainer</h2>
+        <p>日常算牌與基本策略速訓</p>
+      </div>
+
+      <div class="menu-list">
+        <!-- 1. 基本策略訓練 (Expandable Accordion - 點擊展開條列式細項) -->
+        <div class="menu-card accordion" id="card-mode5-group">
+          <div class="menu-card-top" id="btn-toggle-mode5">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>基本策略訓練</h3>
+              <p>S17 / S17s 完美策略秒速盲測</p>
+            </div>
+            <span class="card-arrow" id="mode5-accordion-arrow">▾</span>
+          </div>
+
+          <!-- 條列式一行行展示子選項 (點擊後才展開) -->
+          <div class="menu-sublist hidden" id="home-m5-sublist">
+            <div class="sub-item-row" data-cat="all">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>全方位混題</h4>
+                <p>硬牌、軟牌、對子、投降隨機出題</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-cat="hard">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>硬牌專訓 (Hard)</h4>
+                <p>9 ~ 17 點關鍵要牌與加倍判斷</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-cat="soft">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>軟牌專訓 (Soft)</h4>
+                <p>A,2 ~ A,9 軟手牌加倍與要牌決策</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-cat="pairs">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>對子分牌 (Pairs)</h4>
+                <p>2,2 ~ A,A 最佳分牌攻防策略</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-cat="surrender">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>投降專訓 (Surrender)</h4>
+                <p>15、16 點面對大牌精準棄牌止損</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Hi-Lo 算牌訓練 (Expandable Accordion - 整合算牌訓練項目) -->
+        <div class="menu-card accordion" id="card-hilo-group">
+          <div class="menu-card-top" id="btn-toggle-hilo">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>Hi-Lo 算牌訓練</h3>
+              <p>測速、節奏記憶、成對抵消與真數換算</p>
+            </div>
+            <span class="card-arrow" id="hilo-accordion-arrow">▾</span>
+          </div>
+
+          <!-- 條列式一行行展示算牌項目 (取消模式一～四等標題字樣) -->
+          <div class="menu-sublist hidden" id="home-hilo-sublist">
+            <div class="sub-item-row" data-target="mode1">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>52 張單一副牌衝刺翻牌測速</h4>
+                <p>全球職業算牌團隊入行標準考核 (25~30秒)</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-target="mode2">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>自動節奏定時翻牌訓練</h4>
+                <p>0.5s ~ 1.8s 自動發牌，考驗流水數記憶</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-target="mode3">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>成對視覺抵消練習</h4>
+                <p>一眼看出兩張手牌淨值，提速必修技巧</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-target="mode4">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>真數 (True Count) 心算換算</h4>
+                <p>TC = RC ÷ 剩餘副數，迅速判斷下注優勢</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 基本策略查詢 (獨立頁面入口) -->
+        <div class="menu-card" id="card-lookup-entry" style="cursor: pointer;">
+          <div class="menu-card-top">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>基本策略查詢 (Strategy Lookup)</h3>
+              <p>輸入手牌類型與點數，即時查詢莊家 A~10 最佳策略</p>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings & Weakspots Utility Section -->
+      <div class="home-util-section">
+        <button id="home-rule-toggle" class="util-btn">
+          <span class="util-label"><span class="icon-l2">—</span> 策略規則</span>
+          <strong id="home-rule-text">S17s (含投降)</strong>
+        </button>
+        <button id="home-style-toggle" class="util-btn">
+          <span class="util-label"><span class="icon-l2">—</span> 牌面風格</span>
+          <strong id="home-style-text">實體紙牌</strong>
+        </button>
+        <button id="home-weakspots-btn" class="util-btn full-width">
+          <span class="util-label"><span class="icon-l2">—</span> 弱點手牌回顧分析</span>
+          <strong><span id="weakspots-count">0</span> 題失誤記錄 ›</strong>
+        </button>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODE 5: S17 / S17s 基本策略盲測 (操作介面無雜訊)                    -->
+    <!-- =================================================================== -->
+    <main id="mode5" class="mode-view">
+      <!-- Drill Info Header -->
+      <div class="drill-top-bar">
+        <span class="drill-category-badge" id="m5-cat-title">● S17s 基本策略 · 全方位混題</span>
+        <button class="btn-ctrl" id="btn-m5-change-cat">換分類</button>
+      </div>
+
+      <!-- Casino Felt Table -->
+      <div class="table-felt">
+        <!-- Dealer Hand -->
+        <div class="hand-section">
+          <div class="hand-label-badge">莊家明牌 (Dealer)</div>
+          <div class="cards-row" id="m5-dealer-slot"></div>
+        </div>
+
+        <div style="height: 1px; background: rgba(180, 140, 105, 0.2); margin: 2px 0;"></div>
+
+        <!-- Player Hand -->
+        <div class="hand-section">
+          <div class="cards-row" id="m5-player-slots"></div>
+          <div class="hand-label-badge" id="m5-hand-badge">
+            載入中...
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons (Pure Touch - 2 Rows) -->
+      <div class="action-buttons-wrapper">
+        <div class="action-row row-1">
+          <button class="action-btn btn-hit" data-action="H">
+            <span>要牌</span>
+            <span class="btn-key">[ HIT ]</span>
+          </button>
+          <button class="action-btn btn-stand" data-action="S">
+            <span>停牌</span>
+            <span class="btn-key">[ STAND ]</span>
+          </button>
+        </div>
+        <div class="action-row row-2">
+          <button class="action-btn btn-double" data-action="D">
+            <span>加倍</span>
+            <span class="btn-key">[ DOUBLE ]</span>
+          </button>
+          <button class="action-btn btn-split" data-action="P">
+            <span>分牌</span>
+            <span class="btn-key">[ SPLIT ]</span>
+          </button>
+          <button class="action-btn btn-surrender" data-action="SU">
+            <span>投降</span>
+            <span class="btn-key">[ SURRENDER ]</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Feedback Banner -->
+      <div id="m5-feedback" class="feedback-box hidden"></div>
+
+      <!-- Score Bar -->
+      <div class="score-bar">
+        <div class="score-item">
+          <span class="score-label">目前連對</span>
+          <span class="score-value green" id="m5-streak">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">最高紀錄</span>
+          <span class="score-value gold" id="m5-max-streak">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">答對率</span>
+          <span class="score-value" id="m5-accuracy">0%</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODE 1: 一副牌 52 張衝刺翻牌測速                                   -->
+    <!-- =================================================================== -->
+    <main id="mode1" class="mode-view">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);"><span class="icon-l1">●</span> 一副牌衝刺翻牌測速</span>
+        <span style="font-size: 1.05rem; font-weight: 800; color: var(--gold-primary);" id="m1-timer">0.0s</span>
+      </div>
+
+      <div class="stage-card" id="m1-flip-stage">
+        <div id="m1-card-slot"></div>
+        <div style="position: absolute; bottom: 12px; font-size: 0.85rem; color: var(--text-dim);" id="m1-counter">
+          0 / 51
+        </div>
+      </div>
+
+      <!-- Step 1: Tap to Flip Area -->
+      <div id="m1-action-area" style="margin-top: 14px;">
+        <button class="btn-primary" style="width: 100%; padding: 16px 0; font-size: 1.05rem;" onclick="App.handleMode1Flip()">
+          點此翻下一張牌 (Tap to Flip)
+        </button>
+      </div>
+
+      <!-- Step 2: Input RC Quiz -->
+      <div id="m1-quiz-area" class="hidden" style="margin-top: 14px;">
+        <div style="text-align: center; font-size: 1.05rem; font-weight: 800; margin-bottom: 6px;">
+          51 張牌翻完，耗時 <span id="m1-final-time" style="color: var(--gold-primary);">0.0s</span>
+        </div>
+        <div style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+          請調整並送出你算出的流水數 (RC)：
+        </div>
+        <div class="stepper-input-container">
+          <div class="stepper-row">
+            <button type="button" class="stepper-btn btn-minus" id="m1-btn-minus" aria-label="減少">−</button>
+            <div class="stepper-display" id="m1-stepper-val">0</div>
+            <button type="button" class="stepper-btn btn-plus" id="m1-btn-plus" aria-label="增加">+</button>
+          </div>
+          <button type="button" class="btn-primary stepper-submit" id="m1-btn-submit">送出答案 (Submit)</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Result Summary -->
+      <div id="m1-result-area" class="result-card hidden" style="margin-top: 14px;">
+        <div id="m1-res-status" class="res-title">計算完成</div>
+        <div class="res-data-row">
+          <div>你的答案：<strong id="m1-res-user-rc">0</strong></div>
+          <div>正確 RC：<strong id="m1-res-actual-rc" style="color: var(--accent-latte);">0</strong></div>
+        </div>
+        <div id="m1-res-tier" class="res-tier-badge">優秀職業級</div>
+        <div style="margin-top: 10px;">
+          <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 8px;">扣下的第 52 張暗牌：</div>
+          <div id="m1-hidden-slot" style="display: flex; justify-content: center;"></div>
+          <div id="m1-hidden-info" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;"></div>
+        </div>
+        <button id="btn-m1-restart" class="btn-primary" style="margin-top: 12px;">再衝刺一次 ›</button>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODE 2: 自動節奏定時翻牌訓練                                        -->
+    <!-- =================================================================== -->
+    <main id="mode2" class="mode-view">
+      <div class="pills-container" id="m2-speeds" style="margin-bottom: 12px;">
+        <button class="pill" data-speed="1800">1.8s (入門)</button>
+        <button class="pill active" data-speed="1200">1.2s (常規)</button>
+        <button class="pill" data-speed="800">0.8s (快速)</button>
+        <button class="pill" data-speed="500">0.5s (高壓)</button>
+      </div>
+
+      <div class="stage-card">
+        <div id="m2-card-slot"></div>
+        <div style="position: absolute; bottom: 12px; font-size: 0.85rem; color: var(--text-dim);" id="m2-status">
+          準備就緒
+        </div>
+      </div>
+
+      <button id="btn-m2-start" class="btn-primary" style="width: 100%; margin-top: 14px; padding: 16px 0;">
+        開始自動翻牌 ›
+      </button>
+
+      <!-- Quiz Area -->
+      <div id="m2-quiz-area" class="hidden" style="margin-top: 14px;">
+        <div style="text-align: center; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 8px;">
+          請調整並送出你心算記住的最終流水數 (RC)：
+        </div>
+        <div class="stepper-input-container">
+          <div class="stepper-row">
+            <button type="button" class="stepper-btn btn-minus" id="m2-btn-minus" aria-label="減少">−</button>
+            <div class="stepper-display" id="m2-stepper-val">0</div>
+            <button type="button" class="stepper-btn btn-plus" id="m2-btn-plus" aria-label="增加">+</button>
+          </div>
+          <button type="button" class="btn-primary stepper-submit" id="m2-btn-submit">送出答案 (Submit)</button>
+        </div>
+      </div>
+
+      <!-- Result Area -->
+      <div id="m2-result-area" class="result-card hidden" style="margin-top: 14px;">
+        <div id="m2-res-status" class="res-title">測驗完成</div>
+        <div class="res-data-row">
+          <div>你的答案：<strong id="m2-res-user-rc">0</strong></div>
+          <div>正確 RC：<strong id="m2-res-actual-rc" style="color: var(--accent-latte);">0</strong></div>
+        </div>
+        <div style="font-size: 0.82rem; color: var(--text-dim);">共自動發出 <span id="m2-res-count">0</span> 張牌</div>
+        <button id="btn-m2-restart" class="btn-primary" style="margin-top: 8px;">再測一次 ›</button>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODE 3: 成對視覺抵消練習 (Cancellation Drill)                       -->
+    <!-- =================================================================== -->
+    <main id="mode3" class="mode-view">
+      <div id="m3-quiz-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);"><span class="icon-l1">●</span> 成對視覺抵消練習</span>
+          <span style="font-size: 0.95rem; font-weight: 800; color: var(--gold-primary);" id="m3-q-num">第 1 / 10 題</span>
+        </div>
+
+        <div class="table-felt" style="padding: 24px 10px;">
+          <div class="cards-row">
+            <div id="m3-card-slot1"></div>
+            <div id="m3-card-slot2"></div>
+          </div>
+        </div>
+
+        <div id="m3-feedback" class="quick-feedback"></div>
+
+        <div style="text-align: center; font-size: 0.85rem; color: var(--text-dim); margin-top: 10px;">
+          這手牌的淨值是？請直接點選按鈕作答：
+        </div>
+
+        <!-- 5 Cancellation Buttons -->
+        <div class="cancel-btns-grid">
+          <button class="cancel-btn" data-val="-2">-2</button>
+          <button class="cancel-btn" data-val="-1">-1</button>
+          <button class="cancel-btn zero" data-val="0">0</button>
+          <button class="cancel-btn" data-val="1">+1</button>
+          <button class="cancel-btn" data-val="2">+2</button>
+        </div>
+      </div>
+
+      <!-- Mode 3 Result Screen -->
+      <div id="m3-result-card" class="result-card hidden">
+        <div class="res-title correct">10 題測驗完成</div>
+        <div class="res-data-row">
+          <div>答對題數：<strong id="m3-res-score" style="color: var(--accent-latte);">10 / 10</strong></div>
+        </div>
+        <div style="font-size: 0.95rem; color: var(--text-muted);" id="m3-res-time">總耗時：12.5 秒</div>
+        <button id="btn-m3-restart" class="btn-primary" style="margin-top: 8px;">再來一輪 ›</button>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODE 4: 真數 (True Count) 心算換算速測                             -->
+    <!-- =================================================================== -->
+    <main id="mode4" class="mode-view">
+      <div style="text-align: center; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-dim);">
+        公式：True Count = Running Count ÷ 剩餘副數 (取整數)
+      </div>
+
+      <div class="table-felt" style="align-items: center; text-align: center; padding: 28px 16px;">
+        <div style="display: flex; gap: 32px; justify-content: center; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">流水數 (RC)</div>
+            <div style="font-size: 2.4rem; font-weight: 900; color: var(--accent-latte);" id="m4-rc-val">+8</div>
+          </div>
+          <div style="font-size: 1.8rem; color: var(--text-dim);">÷</div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">剩餘副數 (Decks)</div>
+            <div style="font-size: 2.4rem; font-weight: 900; color: var(--gold-primary);" id="m4-decks-val">2.0 副</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="m4-feedback" class="quick-feedback"></div>
+
+      <div style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">
+        請調整並送出計算出的真數 (TC)：
+      </div>
+
+      <div class="stepper-input-container">
+        <div class="stepper-row">
+          <button type="button" class="stepper-btn btn-minus" id="m4-btn-minus" aria-label="減少">−</button>
+          <div class="stepper-display" id="m4-stepper-val">0</div>
+          <button type="button" class="stepper-btn btn-plus" id="m4-btn-plus" aria-label="增加">+</button>
+        </div>
+        <button type="button" class="btn-primary stepper-submit" id="m4-btn-submit">送出答案 (Submit)</button>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- STRATEGY LOOKUP: 基本策略查詢 (獨立單一頁面)                        -->
+    <!-- =================================================================== -->
+    <main id="lookup-view" class="mode-view">
+      <div class="drill-top-bar">
+        <span class="drill-category-badge" id="lookup-page-badge">● 基本策略查詢 · S17s</span>
+        <button class="btn-ctrl" id="btn-lookup-rule-toggle">S17s (含投降)</button>
+      </div>
+
+      <div class="lookup-page-container">
+        <!-- 查詢輸入區塊 (選項一與選項二) -->
+        <div class="lookup-card">
+          <!-- 選項一：手牌類型 -->
+          <div class="lookup-field">
+            <label class="lookup-label"><span class="icon-l2">—</span> 選項一：手牌類型</label>
+            <div class="lookup-type-pills" id="lookup-type-pills">
+              <button type="button" class="lookup-type-btn active" data-type="hard">硬牌 (Hard)</button>
+              <button type="button" class="lookup-type-btn" data-type="soft">軟牌 (Soft)</button>
+              <button type="button" class="lookup-type-btn" data-type="pairs">對子 (Pair)</button>
+            </div>
+          </div>
+
+          <!-- 選項二：牌面總合 -->
+          <div class="lookup-field">
+            <label class="lookup-label"><span class="icon-l2">—</span> 選項二：牌面總合 / 手牌組合</label>
+            <div class="select-wrapper">
+              <select id="lookup-value-select" class="lookup-select"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 查詢結果區 (莊家 2~A 策略表) -->
+        <div id="lookup-result-box" class="lookup-result-box">
+          <div class="lookup-result-header">
+            <div>
+              <span class="lookup-title-text" id="lookup-result-hand-title">硬牌 16 點</span>
+              <span class="lookup-rule-badge" id="lookup-rule-badge">S17s 規則</span>
+            </div>
+            <span class="lookup-legend">H:要牌 S:停牌 D:加倍 P:分牌 SU:投降</span>
+          </div>
+
+          <!-- 莊家弱牌區 (2 ~ 6) -->
+          <div class="dealer-zone">
+            <div class="zone-label">莊家弱牌面 (2 ~ 6 易爆區)</div>
+            <div class="dealer-grid-row" id="lookup-grid-weak"></div>
+          </div>
+
+          <!-- 莊家強牌區 (7 ~ A) -->
+          <div class="dealer-zone">
+            <div class="zone-label">莊家強牌面 (7 ~ A 進攻區)</div>
+            <div class="dealer-grid-row" id="lookup-grid-strong"></div>
+          </div>
+
+          <!-- 戰術口訣提示 -->
+          <div class="lookup-tip-box" id="lookup-tip-box"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Weak Spots Modal Drawer -->
+    <div id="weakspots-modal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">弱點手牌回顧</div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-clear-weakspots" class="btn-ctrl">清空</button>
+            <button id="btn-close-modal" class="btn-ctrl">關閉</button>
+          </div>
+        </div>
+        <div class="modal-body" id="weakspots-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

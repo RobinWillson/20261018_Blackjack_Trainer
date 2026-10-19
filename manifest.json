@@ -1,0 +1,18 @@
+{
+  "name": "21點 算牌與基本策略速訓器",
+  "short_name": "21點速訓",
+  "description": "專業 21 點 Hi-Lo 算牌與 S17/S17s 基本策略離線訓練器，高顏值、全按鈕觸控免鍵盤。",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f2ec",
+  "theme_color": "#f6f2ec",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
