@@ -196,6 +196,260 @@ function getStrategyTip(evalRes, dealerUp) {
   return '戰術建議：面對莊家 2~6 弱牌盡可能加倍或防守停牌，面對 7~A 強牌積極補牌或棄牌止損。';
 }
 
+// =========================================================================
+// Hi-Lo 真數 (True Count) 指數偏差決策引擎 (Illustrious 18 & Fab 4)
+// =========================================================================
+function getStrategyWithTC(type, key, dealerUp, ruleMode, trueCount) {
+  const table = (ruleMode === 's17s') ? STRATEGY_S17S : STRATEGY_S17;
+  const baseAction = table[type]?.[key]?.[dealerUp] || 'H';
+  let finalAction = baseAction;
+  let isDeviation = false;
+  let devReason = '';
+
+  const tc = parseInt(trueCount, 10) || 0;
+
+  // 1. 硬牌指數偏差 (Hard Totals)
+  if (type === 'hard') {
+    if (key === '16') {
+      if (dealerUp === '10') {
+        if (ruleMode === 's17') {
+          // S17: 基本 H，TC >= 0 停牌 (Stand)
+          if (tc >= 0) {
+            finalAction = 'S';
+            if (baseAction !== 'S') {
+              isDeviation = true;
+              devReason = 'Illustrious 18: TC ≥ 0 停牌 (Stand)';
+            }
+          }
+        } else {
+          // S17s: 基本 SU (投降)。若某些情況下無法投降或純算牌偏差
+          if (tc >= 0 && baseAction === 'H') {
+            finalAction = 'S';
+            isDeviation = true;
+            devReason = 'Illustrious 18: TC ≥ 0 停牌 (Stand)';
+          }
+        }
+      } else if (dealerUp === '9') {
+        if (ruleMode === 's17') {
+          // S17: 基本 H，TC >= +5 停牌 (Stand)
+          if (tc >= 5) {
+            finalAction = 'S';
+            isDeviation = true;
+            devReason = 'Illustrious 18: TC ≥ +5 停牌 (Stand)';
+          }
+        }
+      } else if (dealerUp === 'A') {
+        if (ruleMode === 's17' && tc >= 3) {
+          finalAction = 'S';
+          isDeviation = true;
+          devReason = '高階偏差: TC ≥ +3 停牌 (Stand)';
+        }
+      }
+    } else if (key === '15') {
+      if (dealerUp === '10') {
+        if (ruleMode === 's17') {
+          // S17: 基本 H，TC >= +4 停牌 (Stand)
+          if (tc >= 4) {
+            finalAction = 'S';
+            isDeviation = true;
+            devReason = 'Illustrious 18: TC ≥ +4 停牌 (Stand)';
+          }
+        }
+      } else if (dealerUp === '9') {
+        if (ruleMode === 's17s') {
+          // Fab 4: 15 vs 9 在 TC >= +2 時投降 (Surrender)
+          if (tc >= 2) {
+            finalAction = 'SU';
+            if (baseAction !== 'SU') {
+              isDeviation = true;
+              devReason = 'Fab 4: TC ≥ +2 投降 (Surrender)';
+            }
+          }
+        }
+      }
+    } else if (key === '14') {
+      if (dealerUp === '10' && ruleMode === 's17s') {
+        // Fab 4: 14 vs 10 在 TC >= +3 時投降 (Surrender)
+        if (tc >= 3) {
+          finalAction = 'SU';
+          if (baseAction !== 'SU') {
+            isDeviation = true;
+            devReason = 'Fab 4: TC ≥ +3 投降 (Surrender)';
+          }
+        }
+      }
+    } else if (key === '13') {
+      if (dealerUp === '2') {
+        // 13 vs 2: 基本 S，TC < -1 時要牌 (Hit)
+        if (tc < -1) {
+          finalAction = 'H';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC < -1 要牌 (Hit)';
+        }
+      } else if (dealerUp === '3') {
+        // 13 vs 3: 基本 S，TC < -2 時要牌 (Hit)
+        if (tc < -2) {
+          finalAction = 'H';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC < -2 要牌 (Hit)';
+        }
+      }
+    } else if (key === '12') {
+      if (dealerUp === '2') {
+        // 12 vs 2: 基本 H，TC >= +3 時停牌 (Stand)
+        if (tc >= 3) {
+          finalAction = 'S';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +3 停牌 (Stand)';
+        }
+      } else if (dealerUp === '3') {
+        // 12 vs 3: 基本 H，TC >= +2 時停牌 (Stand)
+        if (tc >= 2) {
+          finalAction = 'S';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +2 停牌 (Stand)';
+        }
+      } else if (dealerUp === '4') {
+        // 12 vs 4: 基本 S，TC < 0 時要牌 (Hit)
+        if (tc < 0) {
+          finalAction = 'H';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC < 0 要牌 (Hit)';
+        }
+      } else if (dealerUp === '5') {
+        // 12 vs 5: 基本 S，TC < -2 時要牌 (Hit)
+        if (tc < -2) {
+          finalAction = 'H';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC < -2 要牌 (Hit)';
+        }
+      } else if (dealerUp === '6') {
+        // 12 vs 6: 基本 S，TC < -1 時要牌 (Hit)
+        if (tc < -1) {
+          finalAction = 'H';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC < -1 要牌 (Hit)';
+        }
+      }
+    } else if (key === '11') {
+      if (dealerUp === 'A' && baseAction === 'H') {
+        // 11 vs A: TC >= +1 加倍 (Double)
+        if (tc >= 1) {
+          finalAction = 'D';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +1 加倍 (Double)';
+        }
+      }
+    } else if (key === '10') {
+      if (dealerUp === '10') {
+        // 10 vs 10: 基本 H，TC >= +4 加倍 (Double)
+        if (tc >= 4) {
+          finalAction = 'D';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +4 加倍 (Double)';
+        }
+      } else if (dealerUp === 'A') {
+        // 10 vs A: 基本 H，TC >= +4 加倍 (Double)
+        if (tc >= 4) {
+          finalAction = 'D';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +4 加倍 (Double)';
+        }
+      }
+    } else if (key === '9') {
+      if (dealerUp === '2') {
+        // 9 vs 2: 基本 H，TC >= +1 加倍 (Double)
+        if (tc >= 1) {
+          finalAction = 'D';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +1 加倍 (Double)';
+        }
+      } else if (dealerUp === '7') {
+        // 9 vs 7: 基本 H，TC >= +3 加倍 (Double)
+        if (tc >= 3) {
+          finalAction = 'D';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +3 加倍 (Double)';
+        }
+      }
+    }
+  } else if (type === 'pairs') {
+    if (key === '10,10') {
+      if (dealerUp === '5') {
+        // 10,10 vs 5: 基本 S，TC >= +5 分牌 (Split)
+        if (tc >= 5) {
+          finalAction = 'P';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +5 分牌 (Split)';
+        }
+      } else if (dealerUp === '6') {
+        // 10,10 vs 6: 基本 S，TC >= +4 分牌 (Split)
+        if (tc >= 4) {
+          finalAction = 'P';
+          isDeviation = true;
+          devReason = 'Illustrious 18: TC ≥ +4 分牌 (Split)';
+        }
+      }
+    }
+  }
+
+  return {
+    action: finalAction,
+    baseAction: baseAction,
+    isDeviation: isDeviation,
+    devReason: devReason
+  };
+}
+
+function getHandDeviationsGuide(type, key, ruleMode) {
+  const guide = [];
+  if (type === 'hard') {
+    if (key === '16') {
+      if (ruleMode === 's17') {
+        guide.push('• 對莊 10：<strong>TC ≥ 0</strong> 時，由要牌改為<strong>停牌 (Stand)</strong>【Illustrious 18 第 2 名】');
+        guide.push('• 對莊 9：<strong>TC ≥ +5</strong> 時，由要牌改為<strong>停牌 (Stand)</strong>');
+      } else {
+        guide.push('• 對莊 10：S17s 優先投降 (SU)；若賭場禁投降，<strong>TC ≥ 0</strong> 時改為<strong>停牌 (Stand)</strong>');
+        guide.push('• 對莊 9：S17s 基本策略已優先投降 (SU)');
+      }
+    } else if (key === '15') {
+      if (ruleMode === 's17') {
+        guide.push('• 對莊 10：<strong>TC ≥ +4</strong> 時，由要牌改為<strong>停牌 (Stand)</strong>【Illustrious 18 第 3 名】');
+      } else {
+        guide.push('• 對莊 10：S17s 優先投降 (SU)；若禁投降，<strong>TC ≥ +4</strong> 時改為<strong>停牌 (Stand)</strong>');
+        guide.push('• 對莊 9：<strong>TC ≥ +2</strong> 時，由要牌改為<strong>投降 (Surrender)</strong>【Fab 4 核心偏差】');
+      }
+    } else if (key === '14') {
+      if (ruleMode === 's17s') {
+        guide.push('• 對莊 10：<strong>TC ≥ +3</strong> 時，由要牌改為<strong>投降 (Surrender)</strong>【Fab 4 核心偏差】');
+      }
+    } else if (key === '13') {
+      guide.push('• 對莊 2：<strong>TC < -1</strong> 時，由停牌改為<strong>要牌 (Hit)</strong>（負數大牌少，積極補牌）');
+      guide.push('• 對莊 3：<strong>TC < -2</strong> 時，由停牌改為<strong>要牌 (Hit)</strong>');
+    } else if (key === '12') {
+      guide.push('• 對莊 3：<strong>TC ≥ +2</strong> 時，由要牌改為<strong>停牌 (Stand)</strong>【Illustrious 18 第 7 名】');
+      guide.push('• 對莊 2：<strong>TC ≥ +3</strong> 時，由要牌改為<strong>停牌 (Stand)</strong>【Illustrious 18 第 8 名】');
+      guide.push('• 對莊 4：<strong>TC < 0</strong> 時，由停牌改為<strong>要牌 (Hit)</strong>');
+      guide.push('• 對莊 5：<strong>TC < -2</strong> 時，由停牌改為<strong>要牌 (Hit)</strong>');
+      guide.push('• 對莊 6：<strong>TC < -1</strong> 時，由停牌改為<strong>要牌 (Hit)</strong>');
+    } else if (key === '11') {
+      guide.push('• 對莊 A：<strong>TC ≥ +1</strong> 時，堅決<strong>加倍下注 (Double)</strong>');
+    } else if (key === '10') {
+      guide.push('• 對莊 10：<strong>TC ≥ +4</strong> 時，由要牌改為<strong>加倍下注 (Double)</strong>【Illustrious 18 第 6 名】');
+      guide.push('• 對莊 A：<strong>TC ≥ +4</strong> 時，由要牌改為<strong>加倍下注 (Double)</strong>');
+    } else if (key === '9') {
+      guide.push('• 對莊 2：<strong>TC ≥ +1</strong> 時，由要牌改為<strong>加倍下注 (Double)</strong>【Illustrious 18 第 10 名】');
+      guide.push('• 對莊 7：<strong>TC ≥ +3</strong> 時，由要牌改為<strong>加倍下注 (Double)</strong>【Illustrious 18 第 12 名】');
+    }
+  } else if (type === 'pairs') {
+    if (key === '10,10') {
+      guide.push('• 對莊 6：<strong>TC ≥ +4</strong> 時，由停牌改為<strong>破天荒分牌 (Split)</strong>【Illustrious 18 第 5 名】');
+      guide.push('• 對莊 5：<strong>TC ≥ +5</strong> 時，由停牌改為<strong>破天荒分牌 (Split)</strong>【Illustrious 18 第 4 名】');
+    }
+  }
+  return guide;
+}
+
 // --- 4. Card HTML Rendering Engine ---
 function createCardElement(card, style = 'realistic') {
   const cardEl = document.createElement('div');
@@ -278,7 +532,8 @@ const App = {
   // Strategy Lookup State
   lookup: {
     type: 'hard', // 'hard' | 'soft' | 'pairs'
-    key: '16'
+    key: '16',
+    trueCount: 0
   },
 
   // Mode 1 State (Speed 52-cards)
@@ -460,6 +715,30 @@ const App = {
         triggerHaptic('light');
         this.lookup.key = valueSelect.value;
         this.runStrategyLookup();
+      });
+    }
+
+    // 策略速查：真數調整 (Stepper - / +，範圍限制 -2 ~ 5)
+    const tcMinus = document.getElementById('lookup-tc-minus');
+    const tcPlus = document.getElementById('lookup-tc-plus');
+    if (tcMinus) {
+      tcMinus.addEventListener('click', () => {
+        triggerHaptic('light');
+        if (this.lookup.trueCount > -2) {
+          this.lookup.trueCount--;
+          this.updateLookupTCUI();
+          this.runStrategyLookup();
+        }
+      });
+    }
+    if (tcPlus) {
+      tcPlus.addEventListener('click', () => {
+        triggerHaptic('light');
+        if (this.lookup.trueCount < 5) {
+          this.lookup.trueCount++;
+          this.updateLookupTCUI();
+          this.runStrategyLookup();
+        }
       });
     }
 
@@ -746,15 +1025,41 @@ const App = {
       ruleBtn.textContent = (this.m5.ruleMode === 's17s') ? 'S17s (含投降)' : 'S17 (無投降)';
     }
 
+    this.updateLookupTCUI();
     this.runStrategyLookup();
   },
 
   // =========================================================================
-  // 基本策略速查功能 (Strategy Lookup Engine)
+  // 基本策略速查功能 (Strategy Lookup Engine with True Count Deviations)
   // =========================================================================
   initStrategyLookup() {
     this.populateLookupSelect();
+    this.updateLookupTCUI();
     this.runStrategyLookup();
+  },
+
+  updateLookupTCUI() {
+    const tcValEl = document.getElementById('lookup-tc-val');
+    const tcBadge = document.getElementById('lookup-result-tc-badge');
+    const tcMinus = document.getElementById('lookup-tc-minus');
+    const tcPlus = document.getElementById('lookup-tc-plus');
+
+    const tc = this.lookup.trueCount;
+    const tcStr = (tc > 0 ? `+${tc}` : `${tc}`);
+
+    if (tcValEl) {
+      tcValEl.textContent = tcStr;
+      if (tc > 0) tcValEl.style.color = 'var(--gold-primary)';
+      else if (tc < 0) tcValEl.style.color = '#721913';
+      else tcValEl.style.color = 'var(--text-main)';
+    }
+
+    if (tcBadge) {
+      tcBadge.textContent = `TC: ${tcStr}`;
+    }
+
+    if (tcMinus) tcMinus.disabled = (tc <= -2);
+    if (tcPlus) tcPlus.disabled = (tc >= 5);
   },
 
   populateLookupSelect() {
@@ -777,6 +1082,7 @@ const App = {
     const table = (this.m5.ruleMode === 's17s') ? STRATEGY_S17S : STRATEGY_S17;
     const type = this.lookup.type;
     const key = this.lookup.key;
+    const tc = this.lookup.trueCount;
 
     const options = LOOKUP_OPTIONS[type] || LOOKUP_OPTIONS.hard;
     const optObj = options.find(o => o.key === key) || options[0];
@@ -787,6 +1093,12 @@ const App = {
     const ruleBadge = document.getElementById('lookup-rule-badge');
     if (ruleBadge) {
       ruleBadge.textContent = (this.m5.ruleMode === 's17s') ? 'S17s 規則 (含投降)' : 'S17 規則 (無投降)';
+    }
+
+    const tcBadge = document.getElementById('lookup-result-tc-badge');
+    if (tcBadge) {
+      const tcStr = (tc > 0 ? `+${tc}` : `${tc}`);
+      tcBadge.textContent = `TC: ${tcStr}`;
     }
 
     const weakGrid = document.getElementById('lookup-grid-weak');
@@ -801,12 +1113,25 @@ const App = {
       'SU': '投降 (SU)'
     };
 
+    let hasAnyDeviation = false;
+    const activeDeviations = [];
+
     const renderCell = (dVal) => {
-      const act = table[type]?.[key]?.[dVal] || 'H';
+      const res = getStrategyWithTC(type, key, dVal, this.m5.ruleMode, tc);
+      if (res.isDeviation) {
+        hasAnyDeviation = true;
+        activeDeviations.push(`• 莊家 <strong>[ ${dVal} ]</strong>：${res.devReason}（標準基本策略原為 ${actionTextMap[res.baseAction] || res.baseAction}）`);
+      }
+
+      const actClass = `act-${res.action}`;
+      const devClass = res.isDeviation ? 'is-deviation' : '';
+      const devBadgeHtml = res.isDeviation ? `<span class="deviation-badge">⚡原${res.baseAction}</span>` : '';
+
       return `
-        <div class="dealer-cell">
+        <div class="dealer-cell ${devClass}">
           <span class="dealer-cell-up">${dVal}</span>
-          <span class="dealer-cell-act act-${act}">${actionTextMap[act] || act}</span>
+          <span class="dealer-cell-act ${actClass}">${actionTextMap[res.action] || res.action}</span>
+          ${devBadgeHtml}
         </div>
       `;
     };
@@ -821,11 +1146,61 @@ const App = {
       strongGrid.innerHTML = strongDealers.map(renderCell).join('');
     }
 
+    if (tcBadge) {
+      tcBadge.classList.toggle('has-deviation', hasAnyDeviation);
+    }
+
     if (tipBox) {
       const sampleDealer = { symbol: '10', val: 10 };
       const evalRes = { action: table[type]?.[key]?.['10'] || 'H', category: type, key: key };
-      const tip = getStrategyTip(evalRes, sampleDealer);
-      tipBox.textContent = tip ? tip : '戰術建議：面對莊家 2~6 弱牌盡可能加倍或防守停牌，面對 7~A 強牌積極補牌或棄牌止損。';
+      const baseTip = getStrategyTip(evalRes, sampleDealer) || '戰術建議：面對莊家 2~6 弱牌盡可能加倍或防守停牌，面對 7~A 強牌積極補牌或棄牌止損。';
+      
+      const tcStr = (tc > 0 ? `+${tc}` : `${tc}`);
+      const devGuide = getHandDeviationsGuide(type, key, this.m5.ruleMode);
+
+      let tipHtml = '';
+
+      // 1. 若當前 TC 觸發偏差，置頂醒目警示
+      if (hasAnyDeviation) {
+        tipHtml += `
+          <div class="tc-deviation-alert">
+            ⚡ <strong>當前 TC = ${tcStr} 已觸發算牌打牌偏差 (Index Deviation)：</strong><br>
+            ${activeDeviations.join('<br>')}
+          </div>
+        `;
+      }
+
+      // 2. 若 TC >= +3，展示保險特權提醒
+      if (tc >= 3) {
+        tipHtml += `
+          <div class="tc-insurance-alert">
+            🛡️ <strong>Illustrious 18 第 1 名保險偏差：</strong>當前 TC = ${tcStr} (≥ +3)，若莊家明牌為 A，<strong>購買保險 (Insurance) 具備 +2.3% 正期望值</strong>！
+          </div>
+        `;
+      }
+
+      // 3. 基本策略戰術解說
+      tipHtml += `<div><strong>【基本戰術】</strong>${baseTip}</div>`;
+
+      // 4. 此手牌的真數偏差速查表
+      if (devGuide.length > 0) {
+        tipHtml += `
+          <div style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed rgba(180, 130, 90, 0.25);">
+            <div style="font-size: 0.76rem; font-weight: 800; color: var(--accent-latte); margin-bottom: 3px;">
+              ★ 此手牌真數偏差閾值 (Illustrious 18 / Fab 4)：
+            </div>
+            ${devGuide.map(g => `<div style="font-size: 0.74rem; line-height: 1.4;">${g}</div>`).join('')}
+          </div>
+        `;
+      } else {
+        tipHtml += `
+          <div style="margin-top: 4px; font-size: 0.74rem; color: var(--text-dim);">
+            ★ 此手牌在所有真數下均嚴格遵循標準基本策略，無需因真數變動出牌。
+          </div>
+        `;
+      }
+
+      tipBox.innerHTML = tipHtml;
     }
   },
 

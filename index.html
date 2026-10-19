@@ -469,11 +469,27 @@
             </div>
           </div>
 
-          <!-- 選項二：牌面總合 -->
-          <div class="lookup-field">
-            <label class="lookup-label"><span class="icon-l2">—</span> 選項二：牌面總合 / 手牌組合</label>
-            <div class="select-wrapper">
-              <select id="lookup-value-select" class="lookup-select"></select>
+          <!-- 選項二與選項三 緊湊雙欄並排 -->
+          <div class="lookup-row-2col">
+            <!-- 選項二：牌面總合 -->
+            <div class="lookup-field lookup-field-val">
+              <label class="lookup-label"><span class="icon-l2">—</span> 選項二：牌面總合</label>
+              <div class="select-wrapper">
+                <select id="lookup-value-select" class="lookup-select"></select>
+              </div>
+            </div>
+
+            <!-- 選項三：真數設定 (True Count) -->
+            <div class="lookup-field lookup-field-tc">
+              <label class="lookup-label"><span class="icon-l2">—</span> 選項三：真數 (TC)</label>
+              <div class="tc-stepper-box">
+                <button type="button" class="tc-step-btn" id="lookup-tc-minus" aria-label="減少真數">−</button>
+                <div class="tc-display-wrapper">
+                  <span class="tc-value-text" id="lookup-tc-val">0</span>
+                  <span class="tc-unit-label">TC</span>
+                </div>
+                <button type="button" class="tc-step-btn" id="lookup-tc-plus" aria-label="增加真數">+</button>
+              </div>
             </div>
           </div>
         </div>
@@ -484,6 +500,7 @@
             <div>
               <span class="lookup-title-text" id="lookup-result-hand-title">硬牌 16 點</span>
               <span class="lookup-rule-badge" id="lookup-rule-badge">S17s 規則</span>
+              <span class="lookup-tc-badge" id="lookup-result-tc-badge">TC: 0</span>
             </div>
             <span class="lookup-legend">H:要牌 S:停牌 D:加倍 P:分牌 SU:投降</span>
           </div>
