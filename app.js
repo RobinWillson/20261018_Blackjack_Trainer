@@ -605,6 +605,7 @@ const App = {
     this.initMode5();
     this.initStrategyLookup();
     this.initSettingsView();
+    this.initTipsView();
     this.updateStatsDisplay();
     this.updateHomeDisplay();
     this.switchTab('home-view');
@@ -743,8 +744,16 @@ const App = {
       });
     }
 
+    // 4. 實戰小技巧 (獨立頁面入口)
+    const cardTips = document.getElementById('card-tips-entry');
+    if (cardTips) {
+      cardTips.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.switchTab('tips-view');
+      });
+    }
 
-    // 4. 弱點手牌回顧 (獨立頁面入口)
+    // 5. 弱點手牌回顧 (獨立頁面入口)
     const cardWeakspots = document.getElementById('card-weakspots-entry');
     if (cardWeakspots) {
       cardWeakspots.addEventListener('click', () => {
@@ -753,7 +762,7 @@ const App = {
       });
     }
 
-    // 5. 其他設定 (獨立頁面入口)
+    // 6. 其他設定 (獨立頁面入口)
     const cardSettings = document.getElementById('card-settings-entry');
     if (cardSettings) {
       cardSettings.addEventListener('click', () => {
@@ -914,9 +923,34 @@ const App = {
         this.renderWeakSpotsList();
       } else if (targetId === 'settings-view') {
         this.updateSettingsDisplay();
+      } else if (targetId === 'tips-view') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+
+  initTipsView() {
+    const tab1 = document.getElementById('btn-blog-tab1');
+    const tab2 = document.getElementById('btn-blog-tab2');
+    const art1 = document.getElementById('blog-article-1');
+    const art2 = document.getElementById('blog-article-2');
+    const goto2 = document.getElementById('btn-goto-article2');
+    const goto1 = document.getElementById('btn-goto-article1');
+
+    const showArticle = (num) => {
+      triggerHaptic('light');
+      if (tab1) tab1.classList.toggle('active', num === 1);
+      if (tab2) tab2.classList.toggle('active', num === 2);
+      if (art1) art1.classList.toggle('active', num === 1);
+      if (art2) art2.classList.toggle('active', num === 2);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (tab1) tab1.addEventListener('click', () => showArticle(1));
+    if (tab2) tab2.addEventListener('click', () => showArticle(2));
+    if (goto2) goto2.addEventListener('click', () => showArticle(2));
+    if (goto1) goto1.addEventListener('click', () => showArticle(1));
   },
 
   updateHomeDisplay() {

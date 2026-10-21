@@ -157,7 +157,19 @@
           </div>
         </div>
 
-        <!-- 4. 弱點手牌回顧分析 (獨立頁面入口) -->
+        <!-- 4. 實戰小技巧 (獨立頁面入口 / Blog 專欄) -->
+        <div class="menu-card" id="card-tips-entry" style="cursor: pointer;">
+          <div class="menu-card-top">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>實戰小技巧 (Pro Tips & Blog)</h3>
+              <p>四大偷懶練習訣竅 · Hi-Lo 注碼擴展與進階心法</p>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 5. 弱點手牌回顧分析 (獨立頁面入口) -->
         <div class="menu-card" id="card-weakspots-entry" style="cursor: pointer;">
           <div class="menu-card-top">
             <span class="icon-l1">●</span>
@@ -613,6 +625,402 @@
             Blackjack Master Trainer · PWA 離線單機版
           </div>
         </div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- TIPS VIEW: 實戰小技巧專欄 (Blog 型式獨立單一頁面)                   -->
+    <!-- =================================================================== -->
+    <main id="tips-view" class="mode-view">
+      <div class="drill-top-bar">
+        <span class="drill-category-badge">● 實戰小技巧專欄 (Pro Blog)</span>
+      </div>
+
+      <div class="tips-page-container">
+        <!-- Blog 分篇標籤 (Tab Switcher) -->
+        <div class="blog-tab-nav">
+          <button type="button" class="blog-tab-btn active" id="btn-blog-tab1" data-article="article-1">
+            <span class="tab-num">01</span>
+            <span class="tab-label">偷懶訣竅與練習法</span>
+          </button>
+          <button type="button" class="blog-tab-btn" id="btn-blog-tab2" data-article="article-2">
+            <span class="tab-num">02</span>
+            <span class="tab-label">Hi-Lo 算牌與注碼優化</span>
+          </button>
+        </div>
+
+        <!-- 文章 1: 四大偷懶訣竅與階梯練習法 -->
+        <article id="blog-article-1" class="blog-article active">
+          <!-- Article Header -->
+          <div class="article-hero">
+            <div class="article-tags">
+              <span class="article-tag-badge">實戰精華</span>
+              <span class="article-read-time">⏱️ 約 3 分鐘閱讀</span>
+            </div>
+            <h2 class="article-title">四大核心偷懶訣竅與階梯練習法</h2>
+            <p class="article-lead">在真實賭場裡，發牌速度極快、周圍吵雜、還有荷官和客人聊天，如果在大腦裡「一張一張算、精確做除法、背十幾張表格」，任何人都不可能應付得來。世界頂尖算牌客減輕 70% 大腦負擔的直覺反射訓練心法。</p>
+          </div>
+
+          <!-- Section 1: 視覺消除法 -->
+          <section class="blog-section">
+            <div class="section-badge">訣竅 01</div>
+            <h3 class="section-title">視覺消除法 (Cancellation Technique) —— 不要一張一張數！</h3>
+            <p class="section-desc">這是職業算牌客大腦負擔減輕 70% 的最大秘密。賭場發牌是每個人兩張、莊家也是兩張，不要算 <code>+1, -1, 0</code>，而是眼睛掃一眼整手牌找抵消：</p>
+            
+            <div class="blog-cards-grid">
+              <div class="blog-card-item">
+                <div class="card-example-title">「一張 10 + 一張 5」</div>
+                <div class="card-example-calc">(-1) + (+1) = 0</div>
+                <div class="card-example-desc">正負互相抵消，直接當作空氣無視！</div>
+              </div>
+              <div class="blog-card-item">
+                <div class="card-example-title">「一張 J + 一張 8」</div>
+                <div class="card-example-calc">(-1) + (0) = -1</div>
+                <div class="card-example-desc">8 為中性牌，整手牌直接秒記 -1。</div>
+              </div>
+              <div class="blog-card-item">
+                <div class="card-example-title">「一張 3 + 一張 4」</div>
+                <div class="card-example-calc">(+1) + (+1) = +2</div>
+                <div class="card-example-desc">兩張都是小牌，直接合併記 +2。</div>
+              </div>
+            </div>
+
+            <div class="tip-callout">
+              <div class="callout-icon">💡</div>
+              <div class="callout-body">
+                <strong>實戰要訣</strong>：荷官發完桌上一圈時，只要看每個人手牌的「淨值」。通常 3~4 個人的牌互相抵消後，流水數（RC）根本沒變多少，切忌一張一張盯著念數字！
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 2: 25秒翻牌測試法 -->
+          <section class="blog-section">
+            <div class="section-badge">訣竅 02</div>
+            <h3 class="section-title">單副撲克牌「25秒翻牌測試法」—— 肌肉記憶入行考核</h3>
+            <p class="section-desc">這是所有職業算牌客（包含麻省理工 MIT 團隊）建立「肌肉記憶」的經典必經練習：</p>
+            
+            <ol class="blog-steps-list">
+              <li><strong>拿一副真實撲克牌</strong>：去掉鬼牌（Joker），共 52 張。</li>
+              <li><strong>快速翻牌心算</strong>：在桌上快速一張一張（或兩張兩張）翻牌，心裡默數流水數 RC。</li>
+              <li><strong>自動驗證機制</strong>：一副牌裡 2～6 有 20 張（+20），10～A 也有 20 張（-20），7～9 為 0。<strong>整副牌翻到最後一張時，流水數 RC 必然剛好等於 0！</strong>如果最後不是 0，代表中間數錯了。</li>
+            </ol>
+
+            <div class="speed-benchmarks">
+              <div class="benchmark-item">
+                <span class="benchmark-tag beginner">初學者</span>
+                <span class="benchmark-time">60 ~ 90 秒</span>
+                <span class="benchmark-desc">需要大腦主動計算</span>
+              </div>
+              <div class="benchmark-item highlight">
+                <span class="benchmark-tag pass">及格門檻</span>
+                <span class="benchmark-time">30 秒以內</span>
+                <span class="benchmark-desc">算牌轉為反射動作，不佔大腦</span>
+              </div>
+              <div class="benchmark-item pro">
+                <span class="benchmark-tag expert">職業門檻</span>
+                <span class="benchmark-time">20 ~ 25 秒</span>
+                <span class="benchmark-desc">零失誤翻完，肌肉記憶達成</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 3: 廢牌盒目測法 -->
+          <section class="blog-section">
+            <div class="section-badge">訣竅 03</div>
+            <h3 class="section-title">真數 (TC) 心算捷徑：看廢牌盒，不精確除法</h3>
+            <p class="section-desc">很多人被「剩餘副數」卡住，其實在現場<strong>絕對不需要算張數</strong>：</p>
+            
+            <div class="blog-tip-box">
+              <div class="tip-box-header">
+                <span class="tip-box-icon">📏</span>
+                <strong>廢牌盒高度目測法 (Discard Tray)</strong>
+              </div>
+              <p>賭場發牌旁邊都有一個透明壓克力的「廢牌盒」：</p>
+              <ul>
+                <li>1 副牌的高度大約是 <strong>1.8 公分</strong>（約食指第一節手指的寬度）。</li>
+                <li>當廢牌盒累積了 2 副牌高，代表 6 副牌的牌靴裡<strong>只剩約 4 副</strong>！</li>
+              </ul>
+            </div>
+
+            <div class="tip-callout">
+              <div class="callout-icon">🎯</div>
+              <div class="callout-body">
+                <strong>整數除法即可，不要計較小數點</strong>：<br>
+                例如看到剩 4 副，RC 是 +8 ➔ <code>8 ÷ 4 = TC +2</code>。<br>
+                看到剩 3 副，RC 是 +7 ➔ 大約就是 +2 到 +2.5（直接按 <strong>+2 級距</strong>的注碼下）。<br>
+                算牌追求的是大方向的優勢，不需要像計算機那樣精確到小數點第二位。
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 4: 斷捨離三大最賺錢偏差 -->
+          <section class="blog-section">
+            <div class="section-badge">訣竅 04</div>
+            <h3 class="section-title">斷捨離：忘掉 18 個偏差，只背「最賺錢的 3 個」！</h3>
+            <p class="section-desc">博弈數學家 Don Schlesinger 證實：Illustrious 18 雖然有 18 個變招，但<strong>前 3 個就佔據了 80% 以上的利潤</strong>！剩下的十幾個記不住完全沒關係：</p>
+
+            <div class="deviations-rank-list">
+              <div class="dev-rank-item gold">
+                <div class="dev-rank-badge">NO.1 貢獻 35% 利潤</div>
+                <div class="dev-rank-title">保險偏差 (Insurance)</div>
+                <div class="dev-rank-rule">規則：<strong>TC ≧ +3 且莊亮 A，果斷買保險！</strong> 其他時候死都不買。</div>
+              </div>
+              <div class="dev-rank-item silver">
+                <div class="dev-rank-badge">NO.2 貢獻 25% 利潤</div>
+                <div class="dev-rank-title">硬牌 16 點 vs 莊家 10 點</div>
+                <div class="dev-rank-rule">規則：只要 <strong>TC ≧ 0（不是負數）就停牌 (Stand)！</strong> 平時 16 點要牌容易爆，只要牌堆稍有大牌，立刻停牌等莊家爆。</div>
+              </div>
+              <div class="dev-rank-item bronze">
+                <div class="dev-rank-badge">NO.3 貢獻 15% 利潤</div>
+                <div class="dev-rank-title">硬牌 15 點 vs 莊家 10 點</div>
+                <div class="dev-rank-rule">規則：當 <strong>TC ≧ +4 時改為停牌 (Stand)</strong>。</div>
+              </div>
+            </div>
+
+            <div class="golden-rule-banner">
+              <div class="banner-badge">★ 實戰黃金法則</div>
+              <p>除了這 3 個之外，<strong>其他所有手牌一律無腦照著死板的 S17/S17s 基本策略打</strong>！</p>
+              <p class="sub-note">算牌獲利的 80% 核心在於<strong>「注碼擴展（Bet Spread，TC 好時下大注）」</strong>，出牌偏差只佔 20%，千萬不要為了記出牌搞得大腦超載。</p>
+            </div>
+          </section>
+
+          <!-- Article Footer Navigation -->
+          <div class="article-nav-footer">
+            <button type="button" class="btn-blog-nav" id="btn-goto-article2">
+              <span>下一篇：Hi-Lo 算牌與注碼優化手冊</span>
+              <span class="nav-arrow">→</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- 文章 2: Hi-Lo 算牌與注碼優化手冊 -->
+        <article id="blog-article-2" class="blog-article">
+          <!-- Article Header -->
+          <div class="article-hero">
+            <div class="article-tags">
+              <span class="article-tag-badge gold">期望值突破</span>
+              <span class="article-read-time">⏱️ 約 4 分鐘閱讀</span>
+            </div>
+            <h2 class="article-title">Hi-Lo 算牌法與注碼拓展策略手冊</h2>
+            <p class="article-lead">在博弈數學歷史上，Hi-Lo 算牌法是少數能打破賭場固定優勢、將長期數學期望值扭轉為正（玩家優勢約 +0.5% 至 +1.5%）的科學方法。掌握非對稱注碼擴展與實戰避險進退法。</p>
+          </div>
+
+          <!-- Section 1: 策略背景與數學原理 -->
+
+          <!-- Section 2: 點數指標換算機制 -->
+
+          <!-- Section 3: 基準注碼擴展矩陣 -->
+          <section class="blog-section">
+            <div class="section-badge">注碼矩陣</div>
+            <h3 class="section-title">基準注碼擴展矩陣 (Bet Spread)</h3>
+            <p class="section-desc">以底注 1 單位 ($50) 為基準，依據即時真數動態調整下注規模：</p>
+            
+            <div class="spread-matrix-grid">
+              <div class="spread-row">
+                <span class="tc-label">TC ≦ +1</span>
+                <span class="bet-mult">1 單位 ($50)</span>
+                <span class="bet-note">莊家優勢期，最低底注防守</span>
+              </div>
+              <div class="spread-row">
+                <span class="tc-label">TC = +2</span>
+                <span class="bet-mult">2 單位 ($100)</span>
+                <span class="bet-note">玩家取得約 +0.5% 微幅優勢</span>
+              </div>
+              <div class="spread-row">
+                <span class="tc-label">TC = +3</span>
+                <span class="bet-mult">4 單位 ($200)</span>
+                <span class="bet-note">優勢擴大至約 +1.0%，開買保險</span>
+              </div>
+              <div class="spread-row">
+                <span class="tc-label">TC = +4</span>
+                <span class="bet-mult">6 單位 ($300)</span>
+                <span class="bet-note">優勢約 +1.5%，積極加碼進攻</span>
+              </div>
+              <div class="spread-row highlight">
+                <span class="tc-label">TC ≧ +5</span>
+                <span class="bet-mult">8 單位 ($400)</span>
+                <span class="bet-note">大牌高度密集，執行重注收割</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 4: 實測大數據突破 -->
+   
+
+          <!-- Section 5: 實戰注碼優化與進階方案 -->
+          <section class="blog-section">
+            <div class="section-badge">實戰進階</div>
+            <h3 class="section-title">實戰注碼優化與進階方案（解決 TC2 冒險感）</h3>
+            <p class="section-desc">在實戰與大樣本統計中，當真數 TC = +2 時，玩家期望優勢僅約 +0.4% 至 +0.5%，此時立即加倍容易面臨統計震盪與心理壓力：</p>
+
+            <div class="tip-callout">
+              <div class="callout-icon">🔍</div>
+              <div class="callout-body">
+                <strong>測試數據背後的數學真相</strong>：<br>
+                在 6 副牌環境中，約有 <strong>75% 至 80% 的局數處於 TC ≦ +1</strong>（莊家佔據約 0.5% 的底層優勢）。若高真數時的最大注碼倍數受限（例如僅拉大到 4 倍），好牌局贏得的籌碼將無法填補長時間負數局被抽走的底注。因此持續同桌下注時，<strong>最大注與底注比例（Spread Ratio）通常需達到 1:8 至 1:12</strong>，才能在數學上穩定克服抽水！
+              </div>
+            </div>
+
+            <div class="adv-schemes-list">
+              <!-- 方案一 -->
+              <div class="scheme-item">
+                <div class="scheme-header">
+                  <span class="scheme-tag">方案一</span>
+                  <strong>延遲發力型（TC2 守底注，TC3+ 啟動重砲）</strong>
+                </div>
+                <p class="scheme-text">徹底避開 TC2 微弱優勢期的震盪，將注碼集中在優勢明確的 TC ≧ +3：</p>
+                
+                <div class="table-responsive">
+                  <table class="scheme-table">
+                    <thead>
+                      <tr>
+                        <th>真數 (TC)</th>
+                        <th>下注單位</th>
+                        <th>下注金額 ($50底)</th>
+                        <th>策略定位</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>TC ≦ +2</strong></td>
+                        <td><span class="badge-mult">1 單位</span></td>
+                        <td>$50</td>
+                        <td>守底注防守，避開微弱震盪</td>
+                      </tr>
+                      <tr>
+                        <td><strong>TC = +3</strong></td>
+                        <td><span class="badge-mult">4 單位</span></td>
+                        <td>$200</td>
+                        <td>優勢達 +1%，啟動重砲</td>
+                      </tr>
+                      <tr>
+                        <td><strong>TC = +4</strong></td>
+                        <td><span class="badge-mult">8 單位</span></td>
+                        <td>$400</td>
+                        <td>優勢明確，拉開注碼槓桿</td>
+                      </tr>
+                      <tr class="row-highlight">
+                        <td><strong>TC ≧ +5</strong></td>
+                        <td><span class="badge-mult highlight"> 16 單位</span></td>
+                        <td>$800</td>
+                        <td>大牌高度密集，全力收割</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="scheme-feat">大幅縮減過渡期的資金回撤，實測勝率依然穩定突破 51%，資金曲線更平穩，徹底消除 TC2 的心理負擔！</div>
+              </div>
+
+              <!-- 方案二 -->
+              <div class="scheme-item">
+                <div class="scheme-header">
+                  <span class="scheme-tag">方案二</span>
+                  <strong>雙門分注法（Spread to 2 Hands）—— 職業牌手實戰首選</strong>
+                </div>
+                <p class="scheme-text">當真數升高時，單門下重注（如 8 單位）遇到莊家大點數時波動劇烈；職業牌手在高真數時通常切換為同時開兩門：</p>
+                
+                <div class="table-responsive">
+                  <table class="scheme-table">
+                    <thead>
+                      <tr>
+                        <th>真數 (TC)</th>
+                        <th>開門數</th>
+                        <th>每門注碼</th>
+                        <th>合計總注</th>
+                        <th>策略效果</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>TC ≦ +2</strong></td>
+                        <td>1 門</td>
+                        <td><span class="badge-mult">1 單位 ($50)</span></td>
+                        <td>$50</td>
+                        <td>低調防守，節省籌碼</td>
+                      </tr>
+                      <tr>
+                        <td><strong>TC ≧ +3</strong></td>
+                        <td>2 門</td>
+                        <td><span class="badge-mult">各 2 單位($100)</span></td>
+                        <td>$200</td>
+                        <td>雙門進攻，分散方差</td>
+                      </tr>
+                      <tr>
+                        <td><strong>TC ≧ +4</strong></td>
+                        <td>2 門</td>
+                        <td><span class="badge-mult">各 4 單位($200)</span></td>
+                        <td>$400</td>
+                        <td>雙門進攻，分散方差</td>
+                      </tr>
+                      <tr class="row-highlight">
+                        <td><strong>TC ≧ +5</strong></td>
+                        <td>2 門</td>
+                        <td><span class="badge-mult highlight">各 10 單位($500)</span></td>
+                        <td>$1000</td>
+                        <td>雙門倍數收割莊家爆牌紅利</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="scheme-feat">雙門協同作戰可使統計標準差降低約 20% 至 25%，顯著平滑資金震盪；同時吃滿莊家爆牌紅利，且兩門中小額度更符合休閒遊客風格，隱蔽偽裝效果極佳！</div>
+              </div>
+
+              <!-- 方案三 -->
+              <div class="scheme-item">
+                <div class="scheme-header">
+                  <span class="scheme-tag">方案三</span>
+                  <strong>避劣離桌法（Wonging / 觀察進退法）</strong>
+                </div>
+                <p class="scheme-text">既然負數局（TC ≦ 0）莊家優勢是長期侵蝕籌碼的元兇，根本之道即為「不在劣勢局下注」：</p>
+                
+                <div class="table-responsive">
+                  <table class="scheme-table">
+                    <thead>
+                      <tr>
+                        <th>階段步驟</th>
+                        <th>真數條件</th>
+                        <th>執行動作</th>
+                        <th>核心效益</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>1. 桌旁觀戰</strong></td>
+                        <td>TC &lt; +2</td>
+                        <td>站立觀戰算牌，絕不下場</td>
+                        <td>避開 80% 負數局抽水</td>
+                      </tr>
+                      <tr class="row-highlight">
+                        <td><strong>2. 入座進攻</strong></td>
+                        <td>TC ≧ +2</td>
+                        <td>迅速入座下注 2 ~ 6 單位</td>
+                        <td>專打玩家正期望值局</td>
+                      </tr>
+                      <tr>
+                        <td><strong>3. 離桌避險</strong></td>
+                        <td>TC ≦ 0</td>
+                        <td>假裝接電話、洗手間離桌</td>
+                        <td>杜絕真數轉差後籌碼耗損</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="scheme-feat">徹底免除 80% 時間的底注耗損。採用此法時，即使注碼擴展倍數僅設定 1:4 至 1:6，勝率與累計淨利亦能表現極為亮眼。</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Article Footer Navigation -->
+          <div class="article-nav-footer">
+            <button type="button" class="btn-blog-nav" id="btn-goto-article1">
+              <span class="nav-arrow">←</span>
+              <span>上一篇：四大偷懶訣竅與練習法</span>
+            </button>
+          </div>
+        </article>
       </div>
     </main>
   </div>
