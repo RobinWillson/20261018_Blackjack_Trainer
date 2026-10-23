@@ -180,6 +180,74 @@ body {
   color: var(--text-main);
 }
 
+.btn-learned {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.btn-learned:hover {
+  border-color: #557c5e;
+  color: #3f6828;
+}
+
+.btn-learned.is-learned-active {
+  background: #e6f2e8 !important;
+  border-color: #557c5e !important;
+  color: #2b542c !important;
+  box-shadow: 0 2px 8px rgba(50, 100, 50, 0.18) !important;
+  transform: scale(0.96);
+}
+
+/* 弱點訓練空狀態提示 */
+.empty-weakspots-box {
+  background: var(--bg-surface);
+  border: 1.5px dashed var(--border-highlight);
+  border-radius: var(--radius-card);
+  padding: 36px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 24px;
+  box-shadow: 0 4px 16px rgba(100, 75, 55, 0.05);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.empty-weakspots-box .empty-icon {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+.empty-weakspots-box h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.empty-weakspots-box p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.empty-weakspots-box .btn-primary-action {
+  background: var(--accent-latte);
+  color: #ffffff;
+  border-color: var(--accent-latte);
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 10px 24px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(156, 102, 59, 0.25);
+  margin-top: 6px;
+}
+
 /* Mode Views */
 .mode-view {
   display: none;

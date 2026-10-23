@@ -486,7 +486,8 @@ const CAT_NAMES = {
   hard: '硬牌專訓',
   soft: '軟牌專訓',
   pairs: '對子分牌',
-  surrender: '投降專訓'
+  surrender: '投降專訓',
+  weakspots: '弱點專訓 (Mistakes)'
 };
 
 const LOOKUP_OPTIONS = {
@@ -753,34 +754,12 @@ const App = {
       });
     }
 
-    // 5. 弱點手牌回顧 (獨立頁面入口)
-    const cardWeakspots = document.getElementById('card-weakspots-entry');
-    if (cardWeakspots) {
-      cardWeakspots.addEventListener('click', () => {
-        triggerHaptic('light');
-        this.switchTab('weakspots-view');
-      });
-    }
-
-    // 6. 其他設定 (獨立頁面入口)
+    // 5. 其他設定 (獨立頁面入口)
     const cardSettings = document.getElementById('card-settings-entry');
     if (cardSettings) {
       cardSettings.addEventListener('click', () => {
         triggerHaptic('light');
         this.switchTab('settings-view');
-      });
-    }
-
-    // 清空弱點紀錄
-    const clearWeakBtn = document.getElementById('btn-clear-weakspots');
-    if (clearWeakBtn) {
-      clearWeakBtn.addEventListener('click', () => {
-        triggerHaptic('light');
-        this.m5.mistakes = [];
-        localStorage.removeItem('bj_mistakes');
-        this.renderWeakSpotsList();
-        this.updateHomeDisplay();
-        this.updateStatsDisplay();
       });
     }
 
@@ -959,9 +938,9 @@ const App = {
       headerStyleBtn.textContent = (this.cardStyle === 'realistic') ? '牌面風格' : '純英文';
     }
 
-    const countEl = document.getElementById('weakspots-count');
+    const countEl = document.getElementById('m5-weak-count');
     if (countEl) {
-      countEl.textContent = this.m5.mistakes.length;
+      countEl.textContent = this.m5.mistakes ? this.m5.mistakes.length : 0;
     }
 
     const homeSettingsDesc = document.getElementById('home-settings-desc');
@@ -1251,8 +1230,8 @@ const App = {
   updateStatsDisplay() {
     const maxEl = document.getElementById('m5-max-streak');
     if (maxEl) maxEl.textContent = this.m5.maxStreak;
-    const countEl = document.getElementById('weakspots-count');
-    if (countEl) countEl.textContent = this.m5.mistakes.length;
+    const countEl = document.getElementById('m5-weak-count');
+    if (countEl) countEl.textContent = this.m5.mistakes ? this.m5.mistakes.length : 0;
   },
 
   // =========================================================================
@@ -1273,11 +1252,32 @@ const App = {
       });
     });
 
+    // 綁定「已學會」按鈕（將此牌面移出弱點題庫）
+    const learnedBtn = document.getElementById('btn-m5-mark-learned');
+    if (learnedBtn) {
+      learnedBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.markCurrentHandLearned();
+      });
+    }
+
+    // 弱點空狀態按鈕：前往全方位訓練
+    const gotoAllBtn = document.getElementById('btn-m5-goto-all');
+    if (gotoAllBtn) {
+      gotoAllBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic('light');
+        this.m5.category = 'all';
+        this.updateMode5Badge();
+        this.nextMode5Question();
+      });
+    }
+
     // 點擊螢幕任一處進入下一題測試
     const mode5View = document.getElementById('mode5');
     if (mode5View) {
       mode5View.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-header-home')) {
+        if (e.target.closest('#btn-header-home') || e.target.closest('#btn-m5-mark-learned') || e.target.closest('#btn-m5-goto-all')) {
           return;
         }
         if (this.m5.waitingNext && this.m5.canAdvance) {
@@ -1302,14 +1302,26 @@ const App = {
       tableFelt.classList.remove('is-correct', 'is-wrong');
     }
 
+    // 若在弱點專訓模式下且無弱點，顯示空狀態
+    if (this.m5.category === 'weakspots' && (!this.m5.mistakes || this.m5.mistakes.length === 0)) {
+      this.showMode5EmptyWeakspots(true);
+      return;
+    }
+    this.showMode5EmptyWeakspots(false);
+
     // 產生手牌情境
     const scenario = this.generateMode5Scenario(this.m5.category);
+    if (!scenario) {
+      this.showMode5EmptyWeakspots(true);
+      return;
+    }
     this.m5.dealerCard = scenario.dealerCard;
     this.m5.pCard1 = scenario.pCard1;
     this.m5.pCard2 = scenario.pCard2;
     this.m5.evalRes = getStandardAction(this.m5.pCard1, this.m5.pCard2, this.m5.dealerCard, this.m5.ruleMode);
 
     this.renderMode5Cards();
+    this.updateLearnedBtnState();
   },
 
   generateMode5Scenario(cat = 'all') {
@@ -1348,6 +1360,24 @@ const App = {
           pCard2 = c2;
           break;
         }
+      }
+    } else if (cat === 'weakspots') {
+      if (!this.m5.mistakes || this.m5.mistakes.length === 0) {
+        return null;
+      }
+      const m = this.m5.mistakes[Math.floor(Math.random() * this.m5.mistakes.length)];
+      if (m.dealerCard && m.pCard1 && m.pCard2) {
+        dealerCard = m.dealerCard;
+        pCard1 = m.pCard1;
+        pCard2 = m.pCard2;
+      } else if (m.dealer && m.hand) {
+        const parts = m.hand.split(' ');
+        pCard1 = this.parseCardFromLabel(parts[0]);
+        pCard2 = this.parseCardFromLabel(parts[1]);
+        dealerCard = this.parseCardFromLabel(m.dealer);
+      }
+      if (!dealerCard || !pCard1 || !pCard2) {
+        return this.generateMode5Scenario('all');
       }
     } else {
       const r = Math.random();
@@ -1425,8 +1455,16 @@ const App = {
         tableFelt.classList.add('is-wrong');
       }
 
-      // 記錄弱點
+      // 記錄弱點（避免重複記錄同一種牌面決策）
+      const dKey = this.m5.dealerCard.symbol === 'A' ? 'A' : (this.m5.dealerCard.val === 10 ? '10' : String(this.m5.dealerCard.val));
+      const scenarioKey = `${this.m5.evalRes.category}_${this.m5.evalRes.key}_vs_${dKey}`;
+
+      this.m5.mistakes = this.m5.mistakes.filter(m => m.scenarioKey !== scenarioKey && m.key !== scenarioKey);
       this.m5.mistakes.unshift({
+        scenarioKey,
+        dealerCard: this.m5.dealerCard,
+        pCard1: this.m5.pCard1,
+        pCard2: this.m5.pCard2,
         dealer: this.m5.dealerCard.label,
         hand: `${this.m5.pCard1.label} ${this.m5.pCard2.label}`,
         userAct: actionNames[userAction] || userAction,
@@ -1434,8 +1472,9 @@ const App = {
         tip,
         time: new Date().toLocaleTimeString()
       });
-      if (this.m5.mistakes.length > 30) this.m5.mistakes.pop();
+      if (this.m5.mistakes.length > 50) this.m5.mistakes.pop();
       localStorage.setItem('bj_mistakes', JSON.stringify(this.m5.mistakes));
+      this.updateLearnedBtnState();
 
       feedbackEl.className = 'feedback-box wrong';
       feedbackEl.innerHTML = `
@@ -1458,26 +1497,114 @@ const App = {
     this.updateStatsDisplay();
   },
 
-  renderWeakSpotsList() {
-    const listEl = document.getElementById('weakspots-list');
-    if (!listEl) return;
-    if (this.m5.mistakes.length === 0) {
-      listEl.innerHTML = `<div class="empty-state">目前無失誤紀錄，請繼續保持！</div>`;
-      return;
+  // 顯示或隱藏弱點空狀態
+  showMode5EmptyWeakspots(show) {
+    const emptyBox = document.getElementById('m5-empty-weakspots');
+    const tableFelt = document.getElementById('m5-table-felt');
+    const actions = document.querySelector('#mode5 .action-buttons-wrapper');
+    const scoreBar = document.querySelector('#mode5 .score-bar');
+    const learnedBtn = document.getElementById('btn-m5-mark-learned');
+    const feedbackEl = document.getElementById('m5-feedback');
+
+    if (emptyBox) emptyBox.classList.toggle('hidden', !show);
+    if (tableFelt) tableFelt.classList.toggle('hidden', show);
+    if (actions) actions.classList.toggle('hidden', show);
+    if (scoreBar) scoreBar.classList.toggle('hidden', show);
+    if (learnedBtn) learnedBtn.classList.toggle('hidden', show);
+    if (feedbackEl && show) feedbackEl.classList.add('hidden');
+  },
+
+  // 標記當前牌面為「已學會」並從弱點清單中移除
+  markCurrentHandLearned() {
+    triggerHaptic('success');
+    if (!this.m5.pCard1 || !this.m5.pCard2 || !this.m5.dealerCard || !this.m5.evalRes) return;
+
+    const dKey = this.m5.dealerCard.symbol === 'A' ? 'A' : (this.m5.dealerCard.val === 10 ? '10' : String(this.m5.dealerCard.val));
+    const currentScenarioKey = `${this.m5.evalRes.category}_${this.m5.evalRes.key}_vs_${dKey}`;
+    const p1Label = this.m5.pCard1.label;
+    const p2Label = this.m5.pCard2.label;
+    const dLabel = this.m5.dealerCard.label;
+
+    // 從弱點清單中移除此牌面
+    this.m5.mistakes = this.m5.mistakes.filter(m => {
+      if (m.scenarioKey && m.scenarioKey === currentScenarioKey) return false;
+      if (m.key && m.key === currentScenarioKey) return false;
+      if (m.hand === `${p1Label} ${p2Label}` && m.dealer === dLabel) return false;
+      if (m.hand === `${p2Label} ${p1Label}` && m.dealer === dLabel) return false;
+      return true;
+    });
+
+    localStorage.setItem('bj_mistakes', JSON.stringify(this.m5.mistakes));
+    this.updateStatsDisplay();
+    this.updateHomeDisplay();
+
+    // 按鈕視覺動畫回饋
+    const btn = document.getElementById('btn-m5-mark-learned');
+    if (btn) {
+      btn.classList.add('is-learned-active');
+      btn.innerHTML = '<span class="icon-check">✓</span> 已移出弱點';
+      setTimeout(() => {
+        if (btn) {
+          btn.classList.remove('is-learned-active');
+          this.updateLearnedBtnState();
+        }
+      }, 750);
     }
-    listEl.innerHTML = this.m5.mistakes.map(m => `
-      <div class="weakspot-item">
-        <div class="weakspot-header">
-          <span>莊 [${m.dealer}] vs 手牌 [${m.hand}]</span>
-          <span class="weakspot-time">${m.time}</span>
-        </div>
-        <div class="weakspot-body">
-          <span class="user-act">你的選擇: ${m.userAct}</span> ➔ 
-          <span class="correct-act">應為: ${m.correctAct}</span>
-        </div>
-        ${m.tip ? `<div class="weakspot-tip">${m.tip}</div>` : ''}
-      </div>
-    `).join('');
+
+    // 若當前處於弱點專訓模式，移除後自動流暢切換到下一題弱點
+    if (this.m5.category === 'weakspots') {
+      setTimeout(() => {
+        this.nextMode5Question();
+      }, 350);
+    }
+  },
+
+  // 更新「已學會」按鈕文字與狀態
+  updateLearnedBtnState() {
+    const btn = document.getElementById('btn-m5-mark-learned');
+    if (!btn || !this.m5.evalRes || !this.m5.dealerCard) return;
+
+    const dKey = this.m5.dealerCard.symbol === 'A' ? 'A' : (this.m5.dealerCard.val === 10 ? '10' : String(this.m5.dealerCard.val));
+    const currentScenarioKey = `${this.m5.evalRes.category}_${this.m5.evalRes.key}_vs_${dKey}`;
+    const isMistake = this.m5.mistakes.some(m => 
+      (m.scenarioKey && m.scenarioKey === currentScenarioKey) ||
+      (m.key && m.key === currentScenarioKey) ||
+      (m.hand && m.hand.includes(this.m5.pCard1.label) && m.dealer === this.m5.dealerCard.label)
+    );
+
+    btn.classList.remove('is-learned-active');
+    if (this.m5.category === 'weakspots' || isMistake) {
+      btn.innerHTML = '<span class="icon-check">✓</span> 標記已學會';
+      btn.title = '此題在弱點名單中，點擊標記為已學會並移出題庫';
+    } else {
+      btn.innerHTML = '<span class="icon-check">✓</span> 已學會';
+      btn.title = '點擊標記為已學會';
+    }
+  },
+
+  // 從牌面字串解析出完整卡牌對象
+  parseCardFromLabel(label) {
+    if (!label || typeof label !== 'string') return null;
+    const suit = label.slice(-1);
+    const symbol = label.slice(0, -1);
+    const suitNames = { 'S': 'Spade', 'H': 'Heart', 'D': 'Diamond', 'C': 'Club' };
+    const suitIcons = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣' };
+    const colors = { 'S': 'black', 'H': 'red', 'D': 'red', 'C': 'black' };
+    let val = parseInt(symbol, 10);
+    if (isNaN(val)) {
+      if (symbol === 'A') val = 1;
+      else val = 10;
+    }
+    return {
+      symbol,
+      val,
+      suit,
+      suitName: suitNames[suit] || 'Spade',
+      suitIcon: suitIcons[suit] || '♠',
+      color: colors[suit] || 'black',
+      hilo: getHiLo(val),
+      label
+    };
   },
 
   // =========================================================================

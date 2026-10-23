@@ -94,6 +94,14 @@
               </div>
               <span class="row-arrow">›</span>
             </div>
+            <div class="sub-item-row" data-cat="weakspots">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>弱點專訓 (Mistakes)</h4>
+                <p>專門盲測答錯的牌面 · <span id="m5-weak-count">0</span> 題待複習</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
           </div>
         </div>
 
@@ -169,18 +177,6 @@
           </div>
         </div>
 
-        <!-- 5. 弱點手牌回顧分析 (獨立頁面入口) -->
-        <div class="menu-card" id="card-weakspots-entry" style="cursor: pointer;">
-          <div class="menu-card-top">
-            <span class="icon-l1">●</span>
-            <div class="card-meta">
-              <h3>弱點手牌回顧分析</h3>
-              <p><span id="weakspots-count">0</span> 題失誤記錄 · 盲測錯題重點複習</p>
-            </div>
-            <span class="card-arrow">›</span>
-          </div>
-        </div>
-
         <!-- 5. 其他設定 (獨立頁面入口) -->
         <div class="menu-card" id="card-settings-entry" style="cursor: pointer;">
           <div class="menu-card-top">
@@ -202,6 +198,21 @@
       <!-- Drill Info Header -->
       <div class="drill-top-bar">
         <span class="drill-category-badge" id="m5-cat-title">● S17s 基本策略 · 全方位混題</span>
+        <button type="button" id="btn-m5-mark-learned" class="btn-ctrl btn-learned" title="標記此牌面為已學會，從弱點牌面中移除">
+          <span class="icon-check">✓</span> 已學會
+        </button>
+      </div>
+
+      <!-- 弱點無牌面時的空狀態展示 -->
+      <div id="m5-empty-weakspots" class="empty-weakspots-box hidden">
+        <div class="empty-icon">🏆</div>
+        <h3>太棒了！目前沒有弱點牌面</h3>
+        <p>所有曾經答錯的盲測手牌都已標記為「已學會」，或尚未有錯誤記錄。</p>
+        <div class="empty-action-btns">
+          <button type="button" class="btn-ctrl btn-primary-action" id="btn-m5-goto-all">
+            前往全方位訓練
+          </button>
+        </div>
       </div>
 
       <!-- Casino Felt Table (單列並排：玩家手牌 | 莊家明牌) -->
@@ -532,20 +543,6 @@
           <!-- 戰術口訣提示 -->
           <div class="lookup-tip-box" id="lookup-tip-box"></div>
         </div>
-      </div>
-    </main>
-
-    <!-- =================================================================== -->
-    <!-- WEAKSPOTS VIEW: 弱點手牌回顧分析 (獨立單一頁面)                     -->
-    <!-- =================================================================== -->
-    <main id="weakspots-view" class="mode-view">
-      <div class="drill-top-bar">
-        <span class="drill-category-badge">● 弱點手牌回顧分析</span>
-        <button id="btn-clear-weakspots" class="btn-ctrl">清空所有記錄</button>
-      </div>
-
-      <div class="weakspots-page-container">
-        <div id="weakspots-list" class="weakspots-list-wrapper"></div>
       </div>
     </main>
 
