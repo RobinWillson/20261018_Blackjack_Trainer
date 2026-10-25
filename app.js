@@ -599,11 +599,37 @@ const App = {
     canAdvance: false
   },
 
+  // Mode 6 State (21+3 Suit Counting & Memory Drill)
+  m6: {
+    targetSuit: 'S', // 'S' | 'H' | 'D' | 'C'
+    subMode: 'hands', // 'hands' | 'continuous'
+    streak: 0,
+    hands: {
+      cards: [],
+      netVal: 0,
+      qIndex: 1,
+      totalQ: 10,
+      correctCount: 0,
+      startTime: 0
+    },
+    cont: {
+      deck: [],
+      targetCount: 24,
+      currentIndex: 0,
+      netVal: 0,
+      userNetVal: 0,
+      timerId: null,
+      isPlaying: false
+    }
+  },
+
   init() {
     this.bindNavigation();
     this.bindHomeCards();
     this.bindSteppers();
     this.initMode5();
+    this.initMode6();
+    this.initSidebetInfoView();
     this.initStrategyLookup();
     this.initSettingsView();
     this.initTipsView();
@@ -677,7 +703,31 @@ const App = {
       });
     });
 
-    // 3. 基本策略查詢 (獨立頁面入口)
+    // 3. 邊注算牌訓練手風琴 Toggle
+    const btnToggleSidebets = document.getElementById('btn-toggle-sidebets');
+    const sidebetsSublist = document.getElementById('home-sidebets-sublist');
+    const sidebetsArrow = document.getElementById('sidebets-accordion-arrow');
+
+    if (btnToggleSidebets && sidebetsSublist) {
+      btnToggleSidebets.addEventListener('click', () => {
+        triggerHaptic('light');
+        const isHidden = sidebetsSublist.classList.toggle('hidden');
+        if (sidebetsArrow) sidebetsArrow.textContent = isHidden ? '▾' : '▴';
+      });
+    }
+
+    // 邊注算牌訓練子項目點擊直達 (mode7, mode6)
+    const sidebetsRows = document.querySelectorAll('#home-sidebets-sublist .sub-item-row');
+    sidebetsRows.forEach(row => {
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic('light');
+        const target = row.dataset.target;
+        if (target) this.switchTab(target);
+      });
+    });
+
+    // 4. 基本策略查詢 (獨立頁面入口)
     const cardLookup = document.getElementById('card-lookup-entry');
     if (cardLookup) {
       cardLookup.addEventListener('click', () => {
@@ -853,6 +903,32 @@ const App = {
         this.evaluateMode4Answer(this.m4.userTC);
       });
     }
+
+    // Mode 6 Stepper (Suit Count)
+    const m6Minus = document.getElementById('m6-btn-minus');
+    const m6Plus = document.getElementById('m6-btn-plus');
+    const m6Submit = document.getElementById('m6-btn-submit');
+    if (m6Minus) {
+      m6Minus.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.m6.cont.userNetVal--;
+        this.updateM6Stepper();
+      });
+    }
+    if (m6Plus) {
+      m6Plus.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.m6.cont.userNetVal++;
+        this.updateM6Stepper();
+      });
+    }
+    if (m6Submit) {
+      m6Submit.addEventListener('click', () => {
+        triggerHaptic('light');
+        this.evaluateMode6ContinuousResult(this.m6.cont.userNetVal);
+      });
+    }
+
   },
 
   updateM1Stepper() {
@@ -868,6 +944,11 @@ const App = {
   updateM4Stepper() {
     const el = document.getElementById('m4-stepper-val');
     if (el) el.textContent = (this.m4.userTC > 0 ? `+${this.m4.userTC}` : `${this.m4.userTC}`);
+  },
+
+  updateM6Stepper() {
+    const el = document.getElementById('m6-stepper-val');
+    if (el) el.textContent = (this.m6.cont.userNetVal > 0 ? `+${this.m6.cont.userNetVal}` : `${this.m6.cont.userNetVal}`);
   },
 
   switchTab(targetId) {
@@ -896,6 +977,10 @@ const App = {
       else if (targetId === 'mode5') {
         this.updateMode5Badge();
         this.nextMode5Question();
+      } else if (targetId === 'mode6') {
+        this.resetMode6();
+      } else if (targetId === 'sidebet-info-view') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (targetId === 'lookup-view') {
         this.updateLookupView();
       } else if (targetId === 'weakspots-view') {
@@ -1933,6 +2018,703 @@ const App = {
       feedback.textContent = `✕ 計算未吻合，應為：${this.m4.rc} ÷ ${this.m4.decks} = ${this.m4.expectedTC >= 0 ? '+' : ''}${this.m4.expectedTC}`;
       feedback.className = 'quick-feedback wrong';
       setTimeout(() => this.nextMode4Question(), 1300);
+    }
+  },
+
+  // =========================================================================
+  // MODE 6: 21+3 花色追蹤記憶速訓 (Suit Counting Drill)
+  // =========================================================================
+  initMode6() {
+    // 1. 目標花色切換 (Pills)
+    const suitPills = document.querySelectorAll('#m6-suit-pills .pill');
+    suitPills.forEach(pill => {
+      pill.onclick = () => {
+        triggerHaptic('light');
+        suitPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.m6.targetSuit = pill.dataset.suit;
+        this.updateMode6SuitUI();
+        if (this.m6.subMode === 'hands') {
+          this.nextMode6HandsQuestion();
+        } else {
+          this.resetMode6Continuous();
+        }
+      };
+    });
+
+    // 2. 訓練子模式切換 (手牌秒測 vs 連續記憶)
+    const submodePills = document.querySelectorAll('#m6-submode-pills .pill');
+    submodePills.forEach(pill => {
+      pill.onclick = () => {
+        triggerHaptic('light');
+        submodePills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.m6.subMode = pill.dataset.submode;
+        document.getElementById('m6-hands-area').classList.toggle('hidden', this.m6.subMode !== 'hands');
+        document.getElementById('m6-continuous-area').classList.toggle('hidden', this.m6.subMode !== 'continuous');
+        if (this.m6.subMode === 'hands') {
+          this.resetMode6Hands();
+        } else {
+          this.resetMode6Continuous();
+        }
+      };
+    });
+
+    // 3. 子模式 A: 4 個淨值按鈕 (+3, -1, -5, -9)
+    const netBtns = document.querySelectorAll('#m6-hands-area .suit-net-btn');
+    netBtns.forEach(btn => {
+      btn.onclick = () => {
+        audio.init();
+        const val = parseInt(btn.dataset.val, 10);
+        this.handleMode6HandsAnswer(val);
+      };
+    });
+
+    const btnHandsRestart = document.getElementById('btn-m6-hands-restart');
+    if (btnHandsRestart) {
+      btnHandsRestart.onclick = () => this.resetMode6Hands();
+    }
+
+    // 4. 子模式 B: 連續發牌張數選擇
+    const contCounts = document.querySelectorAll('#m6-cont-counts .pill');
+    contCounts.forEach(pill => {
+      pill.onclick = () => {
+        triggerHaptic('light');
+        contCounts.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.m6.cont.targetCount = parseInt(pill.dataset.count, 10);
+        this.resetMode6Continuous();
+      };
+    });
+
+    const btnContStart = document.getElementById('btn-m6-cont-start');
+    if (btnContStart) {
+      btnContStart.onclick = () => this.startMode6Continuous();
+    }
+
+    const btnContRestart = document.getElementById('btn-m6-cont-restart');
+    if (btnContRestart) {
+      btnContRestart.onclick = () => this.resetMode6Continuous();
+    }
+  },
+
+  resetMode6() {
+    this.updateMode6SuitUI();
+    document.getElementById('m6-hands-area').classList.toggle('hidden', this.m6.subMode !== 'hands');
+    document.getElementById('m6-continuous-area').classList.toggle('hidden', this.m6.subMode !== 'continuous');
+    if (this.m6.subMode === 'hands') {
+      this.resetMode6Hands();
+    } else {
+      this.resetMode6Continuous();
+    }
+  },
+
+  updateMode6SuitUI() {
+    const suitNames = { 'S': '♠ 黑桃', 'H': '♥ 紅心', 'D': '♦ 方塊', 'C': '♣ 梅花' };
+    const suitName = suitNames[this.m6.targetSuit] || '♠ 黑桃';
+    const targetTextEl = document.getElementById('m6-target-suit-text');
+    if (targetTextEl) targetTextEl.textContent = suitName;
+    const quizNameEl = document.getElementById('m6-quiz-target-name');
+    if (quizNameEl) quizNameEl.textContent = suitName;
+    const streakEl = document.getElementById('m6-stat-streak');
+    if (streakEl) streakEl.textContent = `連對: ${this.m6.streak}`;
+  },
+
+  // --- 子模式 A: 手牌秒測 (Hands Speed Drill) ---
+  resetMode6Hands() {
+    this.m6.hands.qIndex = 1;
+    this.m6.hands.correctCount = 0;
+    this.m6.hands.startTime = Date.now();
+    const felt = document.getElementById('m6-hands-cards');
+    if (felt && felt.parentElement) felt.parentElement.classList.remove('hidden');
+    const btnGrid = document.querySelector('#m6-hands-area .suit-btns-grid');
+    if (btnGrid) btnGrid.classList.remove('hidden');
+    const resCard = document.getElementById('m6-hands-result-card');
+    if (resCard) resCard.classList.add('hidden');
+    this.nextMode6HandsQuestion();
+  },
+
+  nextMode6HandsQuestion() {
+    const deck = createDeck();
+    const c1 = deck.pop();
+    const c2 = deck.pop();
+    const c3 = deck.pop();
+    const cards = [c1, c2, c3];
+
+    // 計算目標花色張數與淨值
+    let targetCount = 0;
+    cards.forEach(c => {
+      if (c.suit === this.m6.targetSuit) targetCount++;
+    });
+    // 淨值公式: (3 - targetCount) * (+1) + targetCount * (-3) = 3 - 4 * targetCount
+    const netVal = 3 - (4 * targetCount);
+
+    this.m6.hands.cards = cards;
+    this.m6.hands.netVal = netVal;
+
+    const qNumEl = document.getElementById('m6-hands-q-num');
+    if (qNumEl) qNumEl.textContent = `第 ${this.m6.hands.qIndex} / 10 題`;
+
+    const cardsContainer = document.getElementById('m6-hands-cards');
+    if (cardsContainer) {
+      cardsContainer.innerHTML = '';
+      cards.forEach(card => {
+        cardsContainer.appendChild(createCardElement(card, this.cardStyle));
+      });
+    }
+
+    const feedback = document.getElementById('m6-hands-feedback');
+    if (feedback) {
+      feedback.textContent = '';
+      feedback.className = 'quick-feedback';
+    }
+  },
+
+  handleMode6HandsAnswer(userVal) {
+    const isCorrect = (userVal === this.m6.hands.netVal);
+    const feedback = document.getElementById('m6-hands-feedback');
+    const netStr = this.m6.hands.netVal > 0 ? `+${this.m6.hands.netVal}` : `${this.m6.hands.netVal}`;
+
+    if (isCorrect) {
+      audio.playCorrect();
+      triggerHaptic('success');
+      this.m6.hands.correctCount++;
+      this.m6.streak++;
+      if (feedback) {
+        feedback.textContent = `✓ 正確！淨值是 ${netStr}`;
+        feedback.className = 'quick-feedback correct';
+      }
+    } else {
+      audio.playWrong();
+      triggerHaptic('error');
+      this.m6.streak = 0;
+      if (feedback) {
+        feedback.textContent = `✕ 答錯，正確淨值為 ${netStr}`;
+        feedback.className = 'quick-feedback wrong';
+      }
+    }
+    this.updateMode6SuitUI();
+
+    if (this.m6.hands.qIndex < 10) {
+      this.m6.hands.qIndex++;
+      setTimeout(() => this.nextMode6HandsQuestion(), 550);
+    } else {
+      setTimeout(() => this.finishMode6Hands(), 550);
+    }
+  },
+
+  finishMode6Hands() {
+    const sec = ((Date.now() - this.m6.hands.startTime) / 1000).toFixed(1);
+    const resCard = document.getElementById('m6-hands-result-card');
+    if (resCard) resCard.classList.remove('hidden');
+    const btnGrid = document.querySelector('#m6-hands-area .suit-btns-grid');
+    if (btnGrid) btnGrid.classList.add('hidden');
+
+    const scoreEl = document.getElementById('m6-hands-res-score');
+    if (scoreEl) scoreEl.textContent = `${this.m6.hands.correctCount} / 10`;
+    const timeEl = document.getElementById('m6-hands-res-time');
+    if (timeEl) timeEl.textContent = `${sec} 秒 (平均 ${(sec / 10).toFixed(1)}s/題)`;
+
+    let desc = '';
+    if (this.m6.hands.correctCount >= 9) {
+      desc = '🏆 優秀！花色淨值視讀已達反射等級，實戰能迅速識別 21+3 機會！';
+    } else if (this.m6.hands.correctCount >= 7) {
+      desc = '👍 良好！熟記 0張=+3、1張=-1、2張=-5、3張=-9 的口訣可進一步提速。';
+    } else {
+      desc = '💪 初學階段：目標花色每張扣 3 點，非目標每張加 1 點，持續多練習！';
+    }
+    const descEl = document.getElementById('m6-hands-res-desc');
+    if (descEl) descEl.textContent = desc;
+  },
+
+  // --- 子模式 B: 連續發牌記憶 (Continuous Memory Drill) ---
+  resetMode6Continuous() {
+    clearInterval(this.m6.cont.timerId);
+    this.m6.cont.isPlaying = false;
+    this.m6.cont.deck = [];
+    this.m6.cont.currentIndex = 0;
+    this.m6.cont.netVal = 0;
+    this.m6.cont.userNetVal = 0;
+
+    const suitIcons = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣' };
+    const icon = suitIcons[this.m6.targetSuit] || '♠';
+
+    const slot = document.getElementById('m6-cont-card-slot');
+    if (slot) {
+      slot.innerHTML = `
+        <div class="start-card-placeholder">
+          <div class="placeholder-icon">${icon}</div>
+          <div class="placeholder-text">點擊下方按鈕開始連續發牌</div>
+        </div>
+      `;
+    }
+    const counterEl = document.getElementById('m6-cont-counter');
+    if (counterEl) counterEl.textContent = '準備就緒';
+    const btnStart = document.getElementById('btn-m6-cont-start');
+    if (btnStart) btnStart.classList.remove('hidden');
+    const quizArea = document.getElementById('m6-cont-quiz-area');
+    if (quizArea) quizArea.classList.add('hidden');
+    const resArea = document.getElementById('m6-cont-result-area');
+    if (resArea) resArea.classList.add('hidden');
+  },
+
+  startMode6Continuous() {
+    audio.init();
+    clearInterval(this.m6.cont.timerId);
+
+    const deck = [];
+    while (deck.length < this.m6.cont.targetCount) {
+      deck.push(...createDeck());
+    }
+    this.m6.cont.deck = deck.slice(0, this.m6.cont.targetCount);
+    this.m6.cont.currentIndex = 0;
+    this.m6.cont.netVal = 0;
+    this.m6.cont.isPlaying = true;
+
+    const btnStart = document.getElementById('btn-m6-cont-start');
+    if (btnStart) btnStart.classList.add('hidden');
+    const quizArea = document.getElementById('m6-cont-quiz-area');
+    if (quizArea) quizArea.classList.add('hidden');
+    const resArea = document.getElementById('m6-cont-result-area');
+    if (resArea) resArea.classList.add('hidden');
+
+    this.runMode6ContinuousStep();
+  },
+
+  runMode6ContinuousStep() {
+    if (!this.m6.cont.isPlaying) return;
+
+    if (this.m6.cont.currentIndex < this.m6.cont.deck.length) {
+      const card = this.m6.cont.deck[this.m6.cont.currentIndex];
+      const isTarget = (card.suit === this.m6.targetSuit);
+      this.m6.cont.netVal += isTarget ? -3 : 1;
+      this.m6.cont.currentIndex++;
+
+      audio.playFlip();
+      triggerHaptic('light');
+
+      const slot = document.getElementById('m6-cont-card-slot');
+      if (slot) {
+        slot.innerHTML = '';
+        slot.appendChild(createCardElement(card, this.cardStyle));
+      }
+
+      const counterEl = document.getElementById('m6-cont-counter');
+      if (counterEl) counterEl.textContent = `${this.m6.cont.currentIndex} / ${this.m6.cont.targetCount} 張`;
+
+      this.m6.cont.timerId = setTimeout(() => {
+        this.runMode6ContinuousStep();
+      }, 1000);
+    } else {
+      this.m6.cont.isPlaying = false;
+      this.showMode6ContinuousQuiz();
+    }
+  },
+
+  showMode6ContinuousQuiz() {
+    const quizArea = document.getElementById('m6-cont-quiz-area');
+    if (quizArea) quizArea.classList.remove('hidden');
+    this.m6.cont.userNetVal = 0;
+    this.updateM6Stepper();
+  },
+
+  evaluateMode6ContinuousResult(userVal) {
+    audio.init();
+    const actual = this.m6.cont.netVal;
+    const isCorrect = (userVal === actual);
+
+    if (isCorrect) {
+      audio.playCorrect();
+      triggerHaptic('success');
+      this.m6.streak++;
+    } else {
+      audio.playWrong();
+      triggerHaptic('error');
+      this.m6.streak = 0;
+    }
+    this.updateMode6SuitUI();
+
+    const quizArea = document.getElementById('m6-cont-quiz-area');
+    if (quizArea) quizArea.classList.add('hidden');
+    const resArea = document.getElementById('m6-cont-result-area');
+    if (resArea) resArea.classList.remove('hidden');
+
+    const statusEl = document.getElementById('m6-cont-res-status');
+    if (statusEl) {
+      statusEl.textContent = isCorrect ? '✓ 心算完全正確！' : '✕ 計算未吻合';
+      statusEl.className = isCorrect ? 'res-title correct' : 'res-title wrong';
+    }
+
+    const userEl = document.getElementById('m6-cont-res-user');
+    if (userEl) userEl.textContent = (userVal > 0 ? `+${userVal}` : userVal);
+    const actEl = document.getElementById('m6-cont-res-actual');
+    if (actEl) actEl.textContent = (actual > 0 ? `+${actual}` : actual);
+
+    // 實戰邊注換算 (假設 6 副牌牌靴，剩餘約 5.5 副)
+    const assumedDecks = 5.5;
+    const tsc = Number((actual / assumedDecks).toFixed(1));
+    const edgeBox = document.getElementById('m6-cont-edge-box');
+
+    if (edgeBox) {
+      let edgeMsg = '';
+      if (tsc >= 14) {
+        edgeMsg = `<strong style="color: #2b542c;">🟢 殘靴極度濃縮 (TSC = +${tsc} ≥ +14)</strong><br>此時目標花色嚴重未出，21+3 同花機率大增，玩家優勢約 <strong>+8% 以上</strong>，為最佳重注進攻時機！`;
+      } else if (tsc >= 10) {
+        edgeMsg = `<strong style="color: #925816;">🟡 達到正期望值門檻 (TSC = +${tsc} ≥ +10)</strong><br>該花色已具備約 <strong>+4.5%</strong> 玩家優勢，可開始進場下注 21+3 邊注！`;
+      } else {
+        edgeMsg = `<strong style="color: #8c2f24;">🔴 優勢不足或稀釋 (TSC = ${tsc >= 0 ? '+' : ''}${tsc} < +10)</strong><br>該花色已被正常消耗或過度開出，此時下注邊注為負期望值，切勿下注！`;
+      }
+      edgeBox.innerHTML = edgeMsg;
+    }
+  },
+
+  // =========================================================================
+  // SIDEBET INFO: 21+3 同花邊注獲利可能性與實戰說明
+  // =========================================================================
+  initSidebetInfoView() {
+    const btnBack = document.getElementById("btn-sidebet-info-back");
+    if (btnBack) {
+      btnBack.addEventListener("click", () => {
+        triggerHaptic("light");
+        this.switchTab("home-view");
+      });
+    }
+
+    const btnGotoDrill = document.getElementById("btn-sidebet-goto-drill");
+    if (btnGotoDrill) {
+      btnGotoDrill.addEventListener("click", () => {
+        triggerHaptic("light");
+        this.switchTab("mode6");
+      });
+    }
+
+    const btnM6GotoInfo = document.getElementById("btn-m6-goto-info");
+    if (btnM6GotoInfo) {
+      btnM6GotoInfo.addEventListener("click", () => {
+        triggerHaptic("light");
+        this.switchTab("sidebet-info-view");
+      });
+    }
+  },
+
+  // =========================================================================
+  // MODE 7: 紅黑差值降維速訓 (Red vs Black Differential Drill)
+  // =========================================================================
+  initMode7() {
+    // 1. 訓練子模式切換 (成對手牌秒測 vs 牌靴連續心算)
+    const submodePills = document.querySelectorAll('#m7-submode-pills .pill');
+    submodePills.forEach(pill => {
+      pill.onclick = () => {
+        triggerHaptic('light');
+        submodePills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.m7.subMode = pill.dataset.submode;
+        document.getElementById('m7-flash-area').classList.toggle('hidden', this.m7.subMode !== 'flash');
+        document.getElementById('m7-shoe-area').classList.toggle('hidden', this.m7.subMode !== 'shoe');
+        if (this.m7.subMode === 'flash') {
+          this.resetMode7Flash();
+        } else {
+          this.resetMode7Shoe();
+        }
+      };
+    });
+
+    // 2. 子模式 A: 3 個紅黑淨值按鈕 (-2 雙黑, 0 一紅一黑, +2 雙紅)
+    const netBtns = document.querySelectorAll('#m7-flash-area .suit-net-btn');
+    netBtns.forEach(btn => {
+      btn.onclick = () => {
+        audio.init();
+        const val = parseInt(btn.dataset.val, 10);
+        this.handleMode7FlashAnswer(val);
+      };
+    });
+
+    const btnFlashRestart = document.getElementById('btn-m7-flash-restart');
+    if (btnFlashRestart) {
+      btnFlashRestart.onclick = () => this.resetMode7Flash();
+    }
+
+    // 3. 子模式 B: 牌靴張數選擇
+    const shoeCounts = document.querySelectorAll('#m7-shoe-counts .pill');
+    shoeCounts.forEach(pill => {
+      pill.onclick = () => {
+        triggerHaptic('light');
+        shoeCounts.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        this.m7.shoe.targetCount = parseInt(pill.dataset.count, 10);
+        this.resetMode7Shoe();
+      };
+    });
+
+    const btnShoeStart = document.getElementById('btn-m7-shoe-start');
+    if (btnShoeStart) {
+      btnShoeStart.onclick = () => this.startMode7Shoe();
+    }
+
+    const btnShoeRestart = document.getElementById('btn-m7-shoe-restart');
+    if (btnShoeRestart) {
+      btnShoeRestart.onclick = () => this.resetMode7Shoe();
+    }
+  },
+
+  resetMode7() {
+    const streakEl = document.getElementById('m7-stat-streak');
+    if (streakEl) streakEl.textContent = `連對: ${this.m7.streak}`;
+
+    document.getElementById('m7-flash-area').classList.toggle('hidden', this.m7.subMode !== 'flash');
+    document.getElementById('m7-shoe-area').classList.toggle('hidden', this.m7.subMode !== 'shoe');
+
+    if (this.m7.subMode === 'flash') {
+      this.resetMode7Flash();
+    } else {
+      this.resetMode7Shoe();
+    }
+  },
+
+  // --- 子模式 A: 成對手牌秒測 (Red vs Black Flash) ---
+  resetMode7Flash() {
+    this.m7.flash.qIndex = 1;
+    this.m7.flash.correctCount = 0;
+    this.m7.flash.startTime = Date.now();
+
+    const felt = document.getElementById('m7-flash-cards');
+    if (felt && felt.parentElement) felt.parentElement.classList.remove('hidden');
+    const btnGrid = document.querySelector('#m7-flash-area .suit-btns-grid');
+    if (btnGrid) btnGrid.classList.remove('hidden');
+    const resCard = document.getElementById('m7-flash-result-card');
+    if (resCard) resCard.classList.add('hidden');
+
+    this.nextMode7FlashQuestion();
+  },
+
+  nextMode7FlashQuestion() {
+    const deck = createDeck();
+    const c1 = deck.pop();
+    const c2 = deck.pop();
+    const cards = [c1, c2];
+
+    // 紅牌 +1，黑牌 -1
+    const v1 = (c1.color === 'red') ? 1 : -1;
+    const v2 = (c2.color === 'red') ? 1 : -1;
+    const netVal = v1 + v2;
+
+    this.m7.flash.cards = cards;
+    this.m7.flash.netVal = netVal;
+
+    const qNumEl = document.getElementById('m7-flash-q-num');
+    if (qNumEl) qNumEl.textContent = `第 ${this.m7.flash.qIndex} / 10 題`;
+
+    const cardsContainer = document.getElementById('m7-flash-cards');
+    if (cardsContainer) {
+      cardsContainer.innerHTML = '';
+      cards.forEach(card => {
+        cardsContainer.appendChild(createCardElement(card, this.cardStyle));
+      });
+    }
+
+    const feedback = document.getElementById('m7-flash-feedback');
+    if (feedback) {
+      feedback.textContent = '';
+      feedback.className = 'quick-feedback';
+    }
+  },
+
+  handleMode7FlashAnswer(userVal) {
+    const isCorrect = (userVal === this.m7.flash.netVal);
+    const feedback = document.getElementById('m7-flash-feedback');
+    const netStr = this.m7.flash.netVal > 0 ? `+${this.m7.flash.netVal}` : `${this.m7.flash.netVal}`;
+
+    if (isCorrect) {
+      audio.playCorrect();
+      triggerHaptic('success');
+      this.m7.flash.correctCount++;
+      this.m7.streak++;
+      if (feedback) {
+        feedback.textContent = `✓ 正確！淨值是 ${netStr}`;
+        feedback.className = 'quick-feedback correct';
+      }
+    } else {
+      audio.playWrong();
+      triggerHaptic('error');
+      this.m7.streak = 0;
+      if (feedback) {
+        feedback.textContent = `✕ 答錯，正確淨值為 ${netStr}`;
+        feedback.className = 'quick-feedback wrong';
+      }
+    }
+
+    const streakEl = document.getElementById('m7-stat-streak');
+    if (streakEl) streakEl.textContent = `連對: ${this.m7.streak}`;
+
+    if (this.m7.flash.qIndex < 10) {
+      this.m7.flash.qIndex++;
+      setTimeout(() => this.nextMode7FlashQuestion(), 550);
+    } else {
+      setTimeout(() => this.finishMode7Flash(), 550);
+    }
+  },
+
+  finishMode7Flash() {
+    const sec = ((Date.now() - this.m7.flash.startTime) / 1000).toFixed(1);
+    const resCard = document.getElementById('m7-flash-result-card');
+    if (resCard) resCard.classList.remove('hidden');
+    const btnGrid = document.querySelector('#m7-flash-area .suit-btns-grid');
+    if (btnGrid) btnGrid.classList.add('hidden');
+
+    const scoreEl = document.getElementById('m7-flash-res-score');
+    if (scoreEl) scoreEl.textContent = `${this.m7.flash.correctCount} / 10`;
+    const timeEl = document.getElementById('m7-flash-res-time');
+    if (timeEl) timeEl.textContent = `${sec} 秒 (平均 ${(sec / 10).toFixed(1)}s/題)`;
+
+    let desc = '';
+    if (this.m7.flash.correctCount >= 9) {
+      desc = '🏆 卓越！紅黑成對抵消已達本能反射，賭桌發牌掃一眼就能瞬間抵消！';
+    } else if (this.m7.flash.correctCount >= 7) {
+      desc = '👍 良好！熟記「一紅一黑直接無視(0)」、「雙紅+2」、「雙黑-2」的口訣！';
+    } else {
+      desc = '💪 初學階段：紅心方塊各+1，黑桃梅花各-1，持續訓練成對抵消！';
+    }
+    const descEl = document.getElementById('m7-flash-res-desc');
+    if (descEl) descEl.textContent = desc;
+  },
+
+  // --- 子模式 B: 牌靴紅黑差值連續心算 (Shoe Differential Drill) ---
+  resetMode7Shoe() {
+    clearInterval(this.m7.shoe.timerId);
+    this.m7.shoe.isPlaying = false;
+    this.m7.shoe.deck = [];
+    this.m7.shoe.currentIndex = 0;
+    this.m7.shoe.diffVal = 0;
+    this.m7.shoe.userDiffVal = 0;
+
+    const slot = document.getElementById('m7-shoe-card-slot');
+    if (slot) {
+      slot.innerHTML = `
+        <div class="start-card-placeholder">
+          <div class="placeholder-icon">🔴⚫</div>
+          <div class="placeholder-text">點擊下方按鈕開始連續翻牌</div>
+        </div>
+      `;
+    }
+    const counterEl = document.getElementById('m7-shoe-counter');
+    if (counterEl) counterEl.textContent = '準備就緒';
+    const btnStart = document.getElementById('btn-m7-shoe-start');
+    if (btnStart) btnStart.classList.remove('hidden');
+    const quizArea = document.getElementById('m7-shoe-quiz-area');
+    if (quizArea) quizArea.classList.add('hidden');
+    const resArea = document.getElementById('m7-shoe-result-area');
+    if (resArea) resArea.classList.add('hidden');
+  },
+
+  startMode7Shoe() {
+    audio.init();
+    clearInterval(this.m7.shoe.timerId);
+
+    const deck = [];
+    while (deck.length < this.m7.shoe.targetCount) {
+      deck.push(...createDeck());
+    }
+    this.m7.shoe.deck = deck.slice(0, this.m7.shoe.targetCount);
+    this.m7.shoe.currentIndex = 0;
+    this.m7.shoe.diffVal = 0;
+    this.m7.shoe.isPlaying = true;
+
+    const btnStart = document.getElementById('btn-m7-shoe-start');
+    if (btnStart) btnStart.classList.add('hidden');
+    const quizArea = document.getElementById('m7-shoe-quiz-area');
+    if (quizArea) quizArea.classList.add('hidden');
+    const resArea = document.getElementById('m7-shoe-result-area');
+    if (resArea) resArea.classList.add('hidden');
+
+    this.runMode7ShoeStep();
+  },
+
+  runMode7ShoeStep() {
+    if (!this.m7.shoe.isPlaying) return;
+
+    if (this.m7.shoe.currentIndex < this.m7.shoe.deck.length) {
+      const card = this.m7.shoe.deck[this.m7.shoe.currentIndex];
+      const isRed = (card.color === 'red');
+      this.m7.shoe.diffVal += isRed ? 1 : -1;
+      this.m7.shoe.currentIndex++;
+
+      audio.playFlip();
+      triggerHaptic('light');
+
+      const slot = document.getElementById('m7-shoe-card-slot');
+      if (slot) {
+        slot.innerHTML = '';
+        slot.appendChild(createCardElement(card, this.cardStyle));
+      }
+
+      const counterEl = document.getElementById('m7-shoe-counter');
+      if (counterEl) counterEl.textContent = `${this.m7.shoe.currentIndex} / ${this.m7.shoe.targetCount} 張`;
+
+      this.m7.shoe.timerId = setTimeout(() => {
+        this.runMode7ShoeStep();
+      }, 1000);
+    } else {
+      this.m7.shoe.isPlaying = false;
+      this.showMode7ShoeQuiz();
+    }
+  },
+
+  showMode7ShoeQuiz() {
+    const quizArea = document.getElementById('m7-shoe-quiz-area');
+    if (quizArea) quizArea.classList.remove('hidden');
+    this.m7.shoe.userDiffVal = 0;
+    this.updateM7Stepper();
+  },
+
+  evaluateMode7ShoeResult(userVal) {
+    audio.init();
+    const actual = this.m7.shoe.diffVal;
+    const isCorrect = (userVal === actual);
+
+    if (isCorrect) {
+      audio.playCorrect();
+      triggerHaptic('success');
+      this.m7.streak++;
+    } else {
+      audio.playWrong();
+      triggerHaptic('error');
+      this.m7.streak = 0;
+    }
+
+    const streakEl = document.getElementById('m7-stat-streak');
+    if (streakEl) streakEl.textContent = `連對: ${this.m7.streak}`;
+
+    const quizArea = document.getElementById('m7-shoe-quiz-area');
+    if (quizArea) quizArea.classList.add('hidden');
+    const resArea = document.getElementById('m7-shoe-result-area');
+    if (resArea) resArea.classList.remove('hidden');
+
+    const statusEl = document.getElementById('m7-shoe-res-status');
+    if (statusEl) {
+      statusEl.textContent = isCorrect ? '✓ 心算完全正確！' : '✕ 計算未吻合';
+      statusEl.className = isCorrect ? 'res-title correct' : 'res-title wrong';
+    }
+
+    const userEl = document.getElementById('m7-shoe-res-user');
+    if (userEl) userEl.textContent = (userVal > 0 ? `+${userVal}` : userVal);
+    const actEl = document.getElementById('m7-shoe-res-actual');
+    if (actEl) actEl.textContent = (actual > 0 ? `+${actual}` : actual);
+
+    // 實戰真差值換算 (以 6 副牌，剩餘約 5 副牌為基準)
+    const assumedDecks = 5.0;
+    const tcc = Number((actual / assumedDecks).toFixed(1));
+    const edgeBox = document.getElementById('m7-shoe-edge-box');
+
+    if (edgeBox) {
+      let edgeMsg = '';
+      if (tcc >= 3.0) {
+        edgeMsg = `<strong style="color: #2b542c;">🟢 黑色牌極度濃縮 (TCC = +${tcc} ≥ +3.0)</strong><br>紅牌大量消耗！殘靴中黑色牌（♠ 黑桃、♣ 梅花）佔比突破 60%，強烈建議鎖定<strong>【黑桃 / 梅花】</strong>下注 21+3 同花！`;
+      } else if (tcc <= -3.0) {
+        edgeMsg = `<strong style="color: #b83a2b;">🔴 紅色牌極度濃縮 (TCC = ${tcc} ≤ -3.0)</strong><br>黑牌大量消耗！殘靴中紅色牌（♥ 紅心、♦ 方塊）佔比突破 60%，強烈建議鎖定<strong>【紅心 / 方塊】</strong>下注 21+3 同花！`;
+      } else {
+        edgeMsg = `<strong style="color: var(--text-dim);">⚪ 紅黑分佈均勻 (TCC = ${tcc >= 0 ? '+' : ''}${tcc})</strong><br>目前色系未出現顯著偏差，下注邊注為負期望值，維持防守勿買邊注。`;
+      }
+      edgeBox.innerHTML = edgeMsg;
     }
   }
 };

@@ -2577,6 +2577,47 @@ body {
   font-size: 0.95rem;
 }
 
+/* Mode 6: Suit Counting Drill Buttons */
+.suit-net-btn {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  box-shadow: 0 2px 6px rgba(100, 75, 55, 0.06);
+}
+
+.suit-net-btn:active {
+  transform: scale(0.93);
+  background: var(--gold-gradient);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.suit-net-btn:active .btn-val,
+.suit-net-btn:active .btn-sub {
+  color: #ffffff !important;
+}
+
+.suit-net-btn .btn-val {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--accent-latte);
+  line-height: 1.1;
+}
+
+.suit-net-btn .btn-sub {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-top: 3px;
+}
+
 .hidden {
   display: none !important;
 }

@@ -153,7 +153,39 @@
           </div>
         </div>
 
-        <!-- 3. 基本策略查詢 (獨立頁面入口) -->
+        <!-- 3. 邊注算牌訓練 (Expandable Accordion - 漏洞邊注高階打法) -->
+        <div class="menu-card accordion" id="card-sidebets-group">
+          <div class="menu-card-top" id="btn-toggle-sidebets">
+            <span class="icon-l1">●</span>
+            <div class="card-meta">
+              <h3>邊注算牌訓練 (Side Bets)</h3>
+              <p>21+3 同花漏洞、花色追蹤與獲利實戰分析</p>
+            </div>
+            <span class="card-arrow" id="sidebets-accordion-arrow">▾</span>
+          </div>
+
+          <!-- 條列式展示邊注訓練項目 -->
+          <div class="menu-sublist hidden" id="home-sidebets-sublist">
+            <div class="sub-item-row" data-target="mode6">
+              <span class="icon-l2">—</span>
+              <div class="sub-meta">
+                <h4>21+3 單花色追蹤速訓 (Target Suit)</h4>
+                <p>3張手牌淨值秒測與殘靴濃縮真花色指數 (TSC)</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+            <div class="sub-item-row" data-target="sidebet-info-view">
+              <span class="icon-l2">ℹ️</span>
+              <div class="sub-meta">
+                <h4>同花獲利可能性與實戰說明 (Analysis)</h4>
+                <p>重點解析 9:1 vs 5:1 賠率生死線、大數據模擬與獲利真相</p>
+              </div>
+              <span class="row-arrow">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 基本策略查詢 (獨立頁面入口) -->
         <div class="menu-card" id="card-lookup-entry" style="cursor: pointer;">
           <div class="menu-card-top">
             <span class="icon-l1">●</span>
@@ -467,6 +499,231 @@
           <button type="button" class="stepper-btn btn-plus" id="m4-btn-plus" aria-label="增加">+</button>
         </div>
         <button type="button" class="btn-primary stepper-submit" id="m4-btn-submit">送出答案 (Submit)</button>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODE 6: 21+3 花色追蹤記憶速訓 (Suit Counting Drill)                -->
+    <!-- =================================================================== -->
+    <main id="mode6" class="mode-view">
+      <!-- 頂部資訊與目標花色選擇 -->
+      <div class="drill-top-bar" style="margin-bottom: 8px;">
+        <span class="drill-category-badge" id="m6-cat-title">● 21+3 花色記憶速訓</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn-ctrl" id="btn-m6-goto-info" style="font-size: 0.75rem; padding: 4px 8px; background: rgba(199, 146, 87, 0.15); color: var(--accent-latte); border: 1px solid var(--accent-latte); border-radius: 6px;">📖 獲利真相說明</button>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--gold-primary);" id="m6-stat-streak">連對: 0</span>
+        </div>
+      </div>
+
+      <!-- 目標花色選擇列 (Pills) -->
+      <div style="margin-bottom: 10px;">
+        <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 4px; display: flex; justify-content: space-between;">
+          <span>監控目標花色：</span>
+          <span style="color: var(--accent-latte); font-weight: 600;">目標花色 -3 · 其他花色 +1</span>
+        </div>
+        <div class="pills-container" id="m6-suit-pills">
+          <button class="pill active" data-suit="S">♠ 黑桃 (Spade)</button>
+          <button class="pill" data-suit="H">♥ 紅心 (Heart)</button>
+          <button class="pill" data-suit="D">♦ 方塊 (Diamond)</button>
+          <button class="pill" data-suit="C">♣ 梅花 (Club)</button>
+        </div>
+      </div>
+
+      <!-- 訓練模式切換 (手牌淨值秒測 vs 連續發牌記憶) -->
+      <div class="pills-container" id="m6-submode-pills" style="margin-bottom: 12px;">
+        <button class="pill active" data-submode="hands">手牌淨值秒測 (3張牌)</button>
+        <button class="pill" data-submode="continuous">連續發牌記憶挑戰</button>
+      </div>
+
+      <!-- 區塊 A: 手牌淨值秒測 (Hands Speed Drill) -->
+      <div id="m6-hands-area">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 0.82rem; color: var(--text-muted);" id="m6-hands-q-num">第 1 / 10 題</span>
+          <span style="font-size: 0.82rem; color: var(--text-dim);">計算此手牌對目標的淨值</span>
+        </div>
+
+        <!-- 牌桌 (展示 3 張牌：模擬 21+3 牌面) -->
+        <div class="table-felt" style="padding: 20px 10px; justify-content: center; min-height: 140px;">
+          <div class="cards-row" id="m6-hands-cards" style="justify-content: center; gap: 8px;"></div>
+        </div>
+
+        <div id="m6-hands-feedback" class="quick-feedback"></div>
+
+        <div style="text-align: center; font-size: 0.85rem; color: var(--text-dim); margin-top: 10px;">
+          點選此牌面對 <strong id="m6-target-suit-text" style="color: var(--accent-latte);">♠ 黑桃</strong> 的淨值：
+        </div>
+
+        <!-- 4 個大尺寸淨值按鈕 (+3, -1, -5, -9) -->
+        <div class="suit-btns-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;">
+          <button class="suit-net-btn" data-val="3">
+            <span class="btn-val">+3</span>
+            <span class="btn-sub">0張目標</span>
+          </button>
+          <button class="suit-net-btn" data-val="-1">
+            <span class="btn-val">-1</span>
+            <span class="btn-sub">1張目標</span>
+          </button>
+          <button class="suit-net-btn" data-val="-5">
+            <span class="btn-val">-5</span>
+            <span class="btn-sub">2張目標</span>
+          </button>
+          <button class="suit-net-btn" data-val="-9">
+            <span class="btn-val">-9</span>
+            <span class="btn-sub">3張全中</span>
+          </button>
+        </div>
+
+        <!-- 模式 A 完成結算卡片 -->
+        <div id="m6-hands-result-card" class="result-card hidden" style="margin-top: 14px;">
+          <div class="res-title correct">10 題手牌測驗完成</div>
+          <div class="res-data-row">
+            <div>正確率：<strong id="m6-hands-res-score" style="color: var(--accent-latte);">10 / 10</strong></div>
+            <div>總耗時：<strong id="m6-hands-res-time">0.0s</strong></div>
+          </div>
+          <div id="m6-hands-res-desc" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px;"></div>
+          <button id="btn-m6-hands-restart" class="btn-primary" style="margin-top: 10px;">再練一輪 ›</button>
+        </div>
+      </div>
+
+      <!-- 區塊 B: 連續發牌記憶挑戰 (Continuous Drill) -->
+      <div id="m6-continuous-area" class="hidden">
+        <!-- 發牌張數設定 -->
+        <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div style="font-size: 0.82rem; color: var(--text-muted);">發牌張數：</div>
+          <div class="pills-container" id="m6-cont-counts" style="padding: 0;">
+            <button class="pill" data-count="12">12 張 (入門)</button>
+            <button class="pill active" data-count="24">24 張 (標準)</button>
+            <button class="pill" data-count="48">48 張 (高壓)</button>
+          </div>
+        </div>
+
+        <div class="stage-card" id="m6-cont-stage">
+          <div id="m6-cont-card-slot">
+            <div class="start-card-placeholder">
+              <div class="placeholder-icon">♠</div>
+              <div class="placeholder-text">點擊下方按鈕開始連續發牌</div>
+            </div>
+          </div>
+          <div style="position: absolute; bottom: 12px; font-size: 0.85rem; color: var(--text-dim);" id="m6-cont-counter">
+            準備就緒
+          </div>
+        </div>
+
+        <button id="btn-m6-cont-start" class="btn-primary" style="width: 100%; margin-top: 14px; padding: 15px 0;">
+          開始發牌心算 ›
+        </button>
+
+        <!-- 結算作答區 -->
+        <div id="m6-cont-quiz-area" class="hidden" style="margin-top: 14px;">
+          <div style="text-align: center; font-size: 0.95rem; font-weight: 800; margin-bottom: 4px;">
+            發牌完成！
+          </div>
+          <div style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            請調整並送出你算出的 <strong id="m6-quiz-target-name">黑桃</strong> 花色淨值：
+          </div>
+          <div class="stepper-input-container">
+            <div class="stepper-row">
+              <button type="button" class="stepper-btn btn-minus" id="m6-btn-minus" aria-label="減少">−</button>
+              <div class="stepper-display" id="m6-stepper-val">0</div>
+              <button type="button" class="stepper-btn btn-plus" id="m6-btn-plus" aria-label="增加">+</button>
+            </div>
+            <button type="button" class="btn-primary stepper-submit" id="m6-btn-submit">送出答案 (Submit)</button>
+          </div>
+        </div>
+
+        <!-- 模式 B 結果卡片 -->
+        <div id="m6-cont-result-area" class="result-card hidden" style="margin-top: 14px;">
+          <div id="m6-cont-res-status" class="res-title">計算完成</div>
+          <div class="res-data-row">
+            <div>你的答案：<strong id="m6-cont-res-user">0</strong></div>
+            <div>正確淨值：<strong id="m6-cont-res-actual" style="color: var(--accent-latte);">0</strong></div>
+          </div>
+          <div id="m6-cont-edge-box" style="margin-top: 10px; padding: 10px; border-radius: 10px; background: #faf6f0; border: 1px solid var(--border-subtle); font-size: 0.85rem; text-align: left;">
+            <!-- 實戰邊注決策建議 -->
+          </div>
+          <button id="btn-m6-cont-restart" class="btn-primary" style="margin-top: 12px;">再挑戰一次 ›</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- SIDEBET INFO: 21+3 同花邊注獲利可能性與實戰剖析                     -->
+    <!-- =================================================================== -->
+    <main id="sidebet-info-view" class="mode-view">
+      <div class="drill-top-bar" style="margin-bottom: 12px;">
+        <span class="drill-category-badge">● 漏洞邊注專題 · 21+3 同花剖析</span>
+        <button class="btn-ctrl" id="btn-sidebet-info-back">‹ 返回首頁</button>
+      </div>
+
+      <div class="blog-container" style="padding-bottom: 24px;">
+        <article class="blog-article active" style="display: block;">
+          <div class="article-meta">
+            <span class="badge-tag">Advantage Play 深度剖析</span>
+            <span class="read-time">⏱️ 閱讀時間：4 分鐘</span>
+          </div>
+
+          <h2 class="article-title" style="margin-top: 6px; font-size: 1.35rem; line-height: 1.35;">
+            21+3 同花邊注獲利可能性：9:1 的暴利神話與 5:1 的殘酷真相
+          </h2>
+
+          <div class="article-body">
+            <!-- 第一段：重點說明賠率 9:1 -->
+            <div style="background: rgba(199, 146, 87, 0.1); border-left: 4px solid var(--accent-latte); padding: 14px 16px; border-radius: 0 12px 12px 0; margin: 14px 0;">
+              <h3 style="margin: 0 0 8px 0; color: var(--accent-latte); font-size: 1.05rem; display: flex; align-items: center; gap: 6px;">
+                🏆 一、賠率 9:1 的黃金年代（為什麼賭界盛傳同花算牌暴利？）
+              </h3>
+              <p style="margin: 0 0 10px 0; line-height: 1.6; font-size: 0.92rem;">
+                在 1990 年代 <strong>21+3 邊注</strong> 最初在拉斯維加斯推廣時，各大賭場開出的同花（Flush）賠率高達驚人的 <strong>9 比 1（9:1）</strong>！這項規則成為了 21 點史上最巨大的數學漏洞之一。
+              </p>
+              <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; line-height: 1.6; color: var(--text-main);">
+                <li><strong>超低的常態劣勢</strong>：在 9:1 賠率下，常態均勻分佈時賭場優勢僅約 <strong>-3.2%</strong>。</li>
+                <li><strong>極易翻正的門檻</strong>：只要殘靴中某單一花色佔比達到 <strong>29.5%（真花色指數 TSC ≥ +10）</strong>，玩家期望值就正式翻正（EV > 0）。</li>
+                <li><strong>恐怖的超額暴利</strong>：當該花色佔比突破 <strong>33%（TSC ≥ +14）</strong> 時，玩家單手優勢飆升至 <strong>+15% ~ +20%</strong>，相當於莊家在給玩家大送錢！</li>
+                <li>當時的職業算牌團隊（AP）專攻 9:1 同花，在牌靴後半段猛烈下重注提款。賭場精算師發現後全面恐慌，隨後在全球賭場將同花賠率大幅腰斬下調至 <strong>5 比 1（5:1）</strong>。</li>
+              </ul>
+            </div>
+
+            <!-- 第二段：5:1 賠率的殘酷現實與大數據模擬真相 -->
+            <h3 style="margin: 22px 0 8px 0; font-size: 1.05rem; color: #b83a2b; display: flex; align-items: center; gap: 6px;">
+              💀 二、現代 5:1 賠率的殘酷現實（大數據百萬局模擬真相）
+            </h3>
+            <p style="line-height: 1.6; font-size: 0.92rem; margin-bottom: 10px;">
+              當同花賠率被砍到 <strong>5:1</strong> 後，賭場優勢瞬間從 -3.2% 暴增至 <strong>-8% ~ -13%</strong>。經過 Strategy 10 數十萬局嚴格模擬，揭露了兩大實戰死穴：
+            </p>
+            <div style="display: grid; gap: 10px; margin-bottom: 16px;">
+              <div style="background: #faf6f0; border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px 14px;">
+                <strong style="color: #b83a2b; font-size: 0.92rem;">1. 主注平注的「負 EV 磨損陷阱」</strong>
+                <p style="margin: 4px 0 0 0; font-size: 0.85rem; line-height: 1.55; color: var(--text-muted);">
+                  若坐在賭桌打滿 100 局平注 $50，主注基本策略每 100 局會被賭場抽水約 <strong>-$25 ~ -$30</strong>。而單一花色達標（TSC ≥ 10）平均 100 局只出現 <strong>1.2 次</strong>！下注 $25 邊注偶爾贏來的微薄利潤，會被主遊戲每局平注的抽水徹底吃光。
+                </p>
+              </div>
+              <div style="background: #faf6f0; border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px 14px;">
+                <strong style="color: #b83a2b; font-size: 0.92rem;">2. 「紅黑差值法」在 5:1 下是致命偽科學</strong>
+                <p style="margin: 4px 0 0 0; font-size: 0.85rem; line-height: 1.55; color: var(--text-muted);">
+                  21+3 是賭<strong>同花色（Same Suit）</strong>而非同顏色。即使黑色牌高達 60%，發出 3 張黑牌時，<strong>高達 75% 的組合都是「♠♠♣、♣♣♠」等黑色混花廢牌</strong>！黑桃與梅花自相殘殺，實測證實紅黑差值在 5:1 下邊注依然大賠（ROI 慘跌 -19% ~ -23%）。
+                </p>
+              </div>
+            </div>
+
+            <!-- 第三段：破局三鐵律 -->
+            <h3 style="margin: 22px 0 8px 0; font-size: 1.05rem; color: #2b542c; display: flex; align-items: center; gap: 6px;">
+              🛡️ 三、實戰破局三鐵律（若要獲利該如何操作？）
+            </h3>
+            <div style="background: #f4f8f4; border: 1px solid #d0e5d0; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;">
+              <ol style="margin: 0; padding-left: 20px; font-size: 0.88rem; line-height: 1.65; color: #1e3b1f;">
+                <li><strong>嚴選賠率表</strong>：進場前優先尋找 <strong>9:1</strong> 或 8:1 的老牌賭場；若是 5:1，必須保持高度清醒，非極端大行情絕不輕易出手。</li>
+                <li><strong>遊走突擊（Wonging），拒絕全程陪坐</strong>：絕不每把下 $50 主注陪賭場磨！職業打法是站在桌後觀看（Back-counting），或平時主注嚴格壓在賭桌最低限（如 $10~$25），直到殘靴極度濃縮時才下大額邊注進攻。</li>
+                <li><strong>深牌靴至上（75% ~ 80% 切牌深度）</strong>：殘靴越薄（剩 1 至 1.5 副牌），分母大幅縮小，單一花色的濃縮爆發力才具備真正的正期望值。</li>
+              </ol>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+              <button id="btn-sidebet-goto-drill" class="btn-primary" style="flex: 1; padding: 12px 0;">
+                前往 21+3 花色記憶速訓 ›
+              </button>
+            </div>
+          </div>
+        </article>
       </div>
     </main>
 

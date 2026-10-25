@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bj-trainer-v21';
+const CACHE_NAME = 'bj-trainer-v24';
 const STATIC_ASSETS = [
   './',
   './index.html',
